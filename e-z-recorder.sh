@@ -108,15 +108,30 @@ else
         notify-send "Starting recording" 'Started' -a 'e-z-recorder.sh'
     fi
     if [[ "$1" == "--sound" ]]; then
-        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$(slurp)" --audio="$(getaudiooutput)" & disown
+        region=$(slurp)
+        if [[ -z "$region" ]]; then
+            notify-send "No region selected" 'Recording aborted' -a 'e-z-recorder.sh'
+            exit 1
+        fi
+        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" & disown
     elif [[ "$1" == "--fullscreen-sound" ]]; then
         wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" & disown
     elif [[ "$1" == "--fullscreen" ]]; then
         wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' & disown
     elif [[ "$1" == "--gif" ]]; then
         touch "$gif_pending_file"
-        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$(slurp)" & disown
+        region=$(slurp)
+        if [[ -z "$region" ]]; then
+            notify-send "No region selected" 'Recording aborted' -a 'e-z-recorder.sh'
+            exit 1
+        fi
+        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" & disown
     else
-        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$(slurp)" & disown
+        region=$(slurp)
+        if [[ -z "$region" ]]; then
+            notify-send "No region selected" 'Recording aborted' -a 'e-z-recorder.sh'
+            exit 1
+        fi
+        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" & disown
     fi
 fi
