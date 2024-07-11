@@ -11,7 +11,11 @@ getaudiooutput() {
     pactl list sources | grep 'Name' | grep 'monitor' | cut -d ' ' -f2
 }
 getactivemonitor() {
-    active_monitor=$(xrandr --listmonitors | grep "\*" | awk '{print $4}')
+    if [ "$XDG_SESSION_TYPE" = "x11" ]; then
+        active_monitor=$(xrandr --listmonitors | grep "\*" | awk '{print $4}')
+    elif [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+        active_monitor=$(wlr-randr | grep "\*" | awk '{print $4}')
+    fi
 }
 
 upload() {
