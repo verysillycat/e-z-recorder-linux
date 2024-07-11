@@ -11,9 +11,7 @@ getaudiooutput() {
     pactl list sources | grep 'Name' | grep 'monitor' | cut -d ' ' -f2
 }
 getactivemonitor() {
-    window=$(xdotool getactivewindow)
-    active_monitor=$(xrandr --listmonitors | grep "$(xdotool getwindowgeometry --shell $window | grep SCREEN | cut -d '=' -f2)" | awk '{print $4}')
-    echo $active_monitor
+    active_monitor=$(xrandr --listmonitors | grep "\*" | awk '{print $4}')
 }
 
 upload() {
