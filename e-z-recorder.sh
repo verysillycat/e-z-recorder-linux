@@ -115,7 +115,7 @@ else
     if [[ "$1" == "--sound" ]]; then
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "No region selected, recording aborted" -a 'e-z-recorder.sh'
+            notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" & disown
@@ -127,14 +127,14 @@ else
         touch "$gif_pending_file"
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "No region selected, recording aborted" -a 'e-z-recorder.sh'
+            notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" & disown
     else
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "No region selected, recording aborted" -a 'e-z-recorder.sh'
+            notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" & disown
