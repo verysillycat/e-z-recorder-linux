@@ -9,9 +9,9 @@
 Go to your prefered terminal and execute this command depending on your Distro.
 
 - **Debian/Ubuntu** `sudo apt install wf-recorder jq xclip`
-- **Fedora** `sudo dnf install wf-recorder jq xclip`
-- **Gentoo** `sudo emerge -av x11-misc/xclip gui-apps/wf-recorder app-misc/jq`
-- **Arch** `sudo pacman -S jq xclip wf-recorder`
+- **Fedora**: `sudo dnf install wf-recorder jq xclip`
+- **Gentoo**: `sudo emerge -av x11-misc/xclip gui-apps/wf-recorder app-misc/jq`
+- **Arch**: `sudo pacman -S jq xclip wf-recorder`
 
 </details>
 
@@ -19,7 +19,7 @@ Go to your prefered terminal and execute this command depending on your Distro.
    ```bash
    git clone https://github.com/verysillycat/e-z-wfrecorder-linux
    cd e-z-wfrecorder-linux
-   ## Replace the APIKEY variable with your E-Z API KEY 
+   # [!] Replace the APIKEY variable with your E-Z API KEY 
    ./e-z-recorder.sh 
    ```
 <details>
