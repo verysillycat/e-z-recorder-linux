@@ -8,7 +8,7 @@
 <summary>How to install them?</summary>
 Go to your prefered terminal and execute this command depending on your Distro.
 
-- **Debian/Ubuntu** `sudo apt install wf-recorder jq xclip`
+- **Debian/Ubuntu**: `sudo apt install wf-recorder jq xclip`
 - **Fedora**: `sudo dnf install wf-recorder jq xclip`
 - **Gentoo**: `sudo emerge -av x11-misc/xclip gui-apps/wf-recorder app-misc/jq`
 - **Arch**: `sudo pacman -S jq xclip wf-recorder`
