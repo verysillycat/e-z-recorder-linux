@@ -32,7 +32,7 @@ Now paste that API KEY into the Script
 * `--sound` snip with sound 
 * `--fullscreen` full screen without sound
 * `--fullscreen-sound` fullscreen with sound
-* `--gif` snip with gif
+* `--gif` snip with gif output
 
 ## Variables
 * `save` will be save your Recorded Videos on `~/Videos`
