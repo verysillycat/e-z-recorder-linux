@@ -19,7 +19,7 @@ Go to your prefered terminal and execute this command depending on your Distro.
    ```bash
    git clone https://github.com/verysillycat/e-z-wfrecorder-linux
    cd e-z-wfrecorder-linux
-   # [!] Replace the APIKEY variable with your E-Z API KEY 
+   # [!] Replace the auth variable with your E-Z API KEY 
    ./e-z-recorder.sh 
    ```
 <details>
