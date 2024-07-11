@@ -4,6 +4,8 @@ auth=""
 url="https://api.e-z.host/files"
 save=false
 
+gif_pending_file="/tmp/gif_pending"
+
 getdate() {
     date '+%Y-%m-%d_%H.%M.%S'
 }
@@ -18,15 +20,23 @@ getactivemonitor() {
     fi
 }
 
-upload() {
+gif() {
     local video_file=$1
+    local gif_file="${video_file%.mp4}.gif"
+    ffmpeg -i "$video_file" -vf "fps=40,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=256[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" -c:v gif "$gif_file"
+    echo "$gif_file"
+}
+
+upload() {
+    local file=$1
+    local is_gif=$2
     response_file="/tmp/uploadvideo.json"
 
-    if [[ ! -f "$video_file" ]]; then
-        notify-send "Error: Video file not found: $video_file" -a "e-z-recorder.sh"
+    if [[ ! -f "$file" ]]; then
+        notify-send "Error: File not found: $file" -a "e-z-recorder.sh"
         exit 1
     fi
-    curl -X POST -F "file=@${video_file}" -H "key: ${auth}" -v "${url}" 2>/dev/null > $response_file
+    curl -X POST -F "file=@${file}" -H "key: ${auth}" -v "${url}" 2>/dev/null > $response_file
 
     echo "Server response:"
     cat $response_file
@@ -52,9 +62,14 @@ upload() {
     file_url=$(jq -r ".imageUrl" < $response_file)
     if [[ "$file_url" != "null" ]]; then
         echo "$file_url" | xclip -sel c
-        notify-send "Video URL copied to clipboard" -a "e-z-recorder.sh"
+        if [[ "$is_gif" == "--gif" ]]; then
+            notify-send "GIF URL copied to clipboard" -a "e-z-recorder.sh"
+            rm "$gif_pending_file"
+        else
+            notify-send "Video URL copied to clipboard" -a "e-z-recorder.sh"
+        fi
         if [[ "$save" == false ]]; then
-            rm "$video_file"
+            rm "$file"
         fi
     else
         notify-send "Error: File URL is null" -a "e-z-recorder.sh"
@@ -70,12 +85,22 @@ else
 fi
 
 if pgrep wf-recorder > /dev/null; then
-    notify-send -t 2000 "Recording Stopped" "Stopped" -a 'e-z-recorder.sh' &
-    pkill wf-recorder &
-    wait
-    sleep 1.5
-    video_file=$(ls -t recording_*.mp4 | head -n 1)
-    upload "$video_file"
+    if [[ -f "$gif_pending_file" || "$1" == "--gif" ]]; then
+        notify-send "Recording is being converted to GIF" "Please Wait.." -a 'e-z-recorder.sh' &
+        pkill wf-recorder &
+        wait
+        sleep 1.5
+        video_file=$(ls -t recording_*.mp4 | head -n 1)
+        gif_file=$(gif "$video_file")
+        upload "$gif_file" "--gif"
+    else
+        notify-send -t 2000 "Recording Stopped" "Stopped" -a 'e-z-recorder.sh' &
+        pkill wf-recorder &
+        wait
+        sleep 1.5
+        video_file=$(ls -t recording_*.mp4 | head -n 1)
+        upload "$video_file"
+    fi
 else
     if [[ "$save" == true ]]; then
         notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
@@ -88,6 +113,9 @@ else
         wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" & disown
     elif [[ "$1" == "--fullscreen" ]]; then
         wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' & disown
+    elif [[ "$1" == "--gif" ]]; then
+        touch "$gif_pending_file"
+        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$(slurp)" & disown
     else
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$(slurp)" & disown
     fi

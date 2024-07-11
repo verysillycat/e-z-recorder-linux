@@ -3,15 +3,15 @@
 #### Recording Videos & Uploading them to [e-z.host](https://e-z.host) with region, and sound support.
 <br><br>
 ## Dependencies
-`jq`, `xclip`, `slurp` & `wf-recorder`
+`jq`, `xclip`, `slurp`, `ffmpeg` & `wf-recorder`
 <details>
 <summary>How to install them?</summary>
 Go to your prefered terminal and execute this command depending on your Distro.
 
-- **Debian/Ubuntu**: `sudo apt install wf-recorder jq xclip slurp`
-- **Fedora**: `sudo dnf install wf-recorder jq xclip slurp`
-- **Gentoo**: `sudo emerge -av gui-apps/wf-recorder app-misc/jq x11-misc/xclip gui-apps/slurp`
-- **Arch**: `sudo pacman -S wf-recorder jq xclip slurp`
+- **Debian/Ubuntu**: `sudo apt install wf-recorder jq xclip slurp ffmpeg`
+- **Fedora**: `sudo dnf install wf-recorder jq xclip slurp ffmpeg`
+- **Gentoo**: `sudo emerge -av gui-apps/wf-recorder app-misc/jq x11-misc/xclip gui-apps/slurp media-video/ffmpeg`
+- **Arch**: `sudo pacman -S wf-recorder jq xclip slurp ffmpeg`
 
 </details>
 
