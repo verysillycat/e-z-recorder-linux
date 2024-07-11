@@ -91,7 +91,7 @@ fi
 
 if pgrep wf-recorder > /dev/null; then
     if [[ -f "$gif_pending_file" || "$1" == "--gif" ]]; then
-        notify-send "Recording is being converted to GIF" "Please Wait.." -a 'e-z-recorder.sh' &
+        notify-send -t 5000 "Recording is being converted to GIF" "Please Wait.." -a 'e-z-recorder.sh' &
         pkill wf-recorder &
         wait
         sleep 1.5
