@@ -6,6 +6,11 @@ save=false
 
 gif_pending_file="/tmp/gif_pending"
 
+if [[ -z "$url" ]]; then
+    notify-send "URL is not set." 'Did you copy the Script Correctly?' -a "e-z-recorder.sh"
+    exit 1
+fi
+
 getdate() {
     date '+%Y-%m-%d_%H.%M.%S'
 }
@@ -110,7 +115,7 @@ else
     if [[ "$1" == "--sound" ]]; then
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "No region selected" 'Recording aborted' -a 'e-z-recorder.sh'
+            notify-send "No region selected, recording aborted" -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" & disown
@@ -122,14 +127,14 @@ else
         touch "$gif_pending_file"
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "No region selected" 'Recording aborted' -a 'e-z-recorder.sh'
+            notify-send "No region selected, recording aborted" -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" & disown
     else
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "No region selected" 'Recording aborted' -a 'e-z-recorder.sh'
+            notify-send "No region selected, recording aborted" -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" & disown
