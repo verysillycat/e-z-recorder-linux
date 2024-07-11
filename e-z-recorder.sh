@@ -21,7 +21,7 @@ upload() {
     response_file="/tmp/uploadvideo.json"
 
     if [[ ! -f "$video_file" ]]; then
-        notify-send "Error: Video file not found: $video_file" -a "record-script.sh"
+        notify-send "Error: Video file not found: $video_file" -a "e-z-recorder.sh"
         exit 1
     fi
     curl -X POST -F "file=@${video_file}" -H "key: ${auth}" -v "${url}" 2>/dev/null > $response_file
@@ -30,7 +30,7 @@ upload() {
     cat $response_file
 
     if ! jq -e . >/dev/null 2>&1 < $response_file; then
-        notify-send "Error occurred while uploading. Please try again later." -a "record-script.sh"
+        notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
         rm $response_file
         exit 1
     fi
@@ -39,9 +39,9 @@ upload() {
     if [[ "$success" != "true" ]] || [[ "$success" == "null" ]]; then
         error=$(jq -r ".error" < $response_file)
         if [[ "$error" == "null" ]]; then
-            notify-send "Error occurred while uploading. Please try again later." -a "record-script.sh"
+            notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
         else
-            notify-send "Error: $error" -a "record-script.sh"
+            notify-send "Error: $error" -a "e-z-recorder.sh"
         fi
         rm $response_file
         exit 1
@@ -50,12 +50,12 @@ upload() {
     file_url=$(jq -r ".imageUrl" < $response_file)
     if [[ "$file_url" != "null" ]]; then
         echo "$file_url" | xclip -sel c
-        notify-send "Video URL copied to clipboard" -a "record-script.sh"
+        notify-send "Video URL copied to clipboard" -a "e-z-recorder.sh"
         if [[ "$save" == false ]]; then
             rm "$video_file"
         fi
     else
-        notify-send "Error: File URL is null" -a "record-script.sh"
+        notify-send "Error: File URL is null" -a "e-z-recorder.sh"
     fi
     rm $response_file
 }
@@ -68,7 +68,7 @@ else
 fi
 
 if pgrep wf-recorder > /dev/null; then
-    notify-send -t 2000 "Recording Stopped" "Stopped" -a 'record-script.sh' &
+    notify-send -t 2000 "Recording Stopped" "Stopped" -a 'e-z-recorder.sh' &
     pkill wf-recorder &
     wait
     sleep 1.5
@@ -76,9 +76,9 @@ if pgrep wf-recorder > /dev/null; then
     upload "$video_file"
 else
     if [[ "$save" == true ]]; then
-        notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'record-script.sh'
+        notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
     else
-        notify-send "Starting recording" 'Started' -a 'record-script.sh'
+        notify-send "Starting recording" 'Started' -a 'e-z-recorder.sh'
     fi
     if [[ "$1" == "--sound" ]]; then
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$(slurp)" --audio="$(getaudiooutput)" & disown
