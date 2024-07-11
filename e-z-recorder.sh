@@ -29,6 +29,7 @@ gif() {
     local video_file=$1
     local gif_file="${video_file%.mp4}.gif"
     ffmpeg -i "$video_file" -vf "fps=40,scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=256[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5" -c:v gif "$gif_file"
+    rm "$video_file"
     echo "$gif_file"
 }
 
