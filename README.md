@@ -3,15 +3,15 @@
 #### Recording Videos & Uploading them to [e-z.host](https://e-z.host) with region, and sound support.
 <br><br>
 ## Dependencies
-`jq` `xclip` & `wf-recorder`
+`wf-recorder` `xclip` & `jq`
 <details>
 <summary>How to install them?</summary>
 Go to your prefered terminal and execute this command depending on your Distro.
 
 - **Debian/Ubuntu**: `sudo apt install wf-recorder jq xclip`
 - **Fedora**: `sudo dnf install wf-recorder jq xclip`
-- **Gentoo**: `sudo emerge -av x11-misc/xclip gui-apps/wf-recorder app-misc/jq`
-- **Arch**: `sudo pacman -S jq xclip wf-recorder`
+- **Gentoo**: `sudo emerge -av gui-apps/wf-recorder app-misc/jq x11-misc/xclip`
+- **Arch**: `sudo pacman -S wf-recorder jq xclip`
 
 </details>
 
@@ -38,4 +38,4 @@ Now paste that API KEY into the Script
 
 
 ## Credits
-This script was is based of [End's Dotfiles Record script](https://github.com/end-4/dots-hyprland/blob/main/.config/ags/scripts/record-script.sh) but also to allow monitor support for all DEs
+This script was is based on [End's Dotfiles Record script](https://github.com/end-4/dots-hyprland/blob/main/.config/ags/scripts/record-script.sh) but also to allow monitor support for all DEs
