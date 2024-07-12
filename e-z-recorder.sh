@@ -56,7 +56,7 @@ upload() {
         elif [[ "$http_status" -eq 000 ]]; then
             notify-send "Error: Check your Internet connection." -a "e-z-recorder.sh"
         else
-            notify-send "Error $http_status occurred while uploading, Try again later." -a "e-z-recorder.sh"
+            notify-send "Error: $http_status occurred while uploading, Try again later." -a "e-z-recorder.sh"
         fi
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
         if [[ "$failsave" == true ]]; then
