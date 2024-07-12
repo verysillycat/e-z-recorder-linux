@@ -35,7 +35,8 @@ Now paste that API KEY into the Script
 * `--gif` snip with gif output
 
 ## Variables
-* `save` will be save your Recorded Videos on `~/Videos`
+* `fps` will be your Max FPS
+* `save` will save your Recorded Videos on `~/Videos`
 
 
 ## Credits
