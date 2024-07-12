@@ -112,7 +112,7 @@ if pgrep wf-recorder > /dev/null; then
     fi
 else
     if [[ "$1" == "--sound" ]]; then
-        notify-send "Screen Snip Recording" "Select the region to record" -a 'e-z-recorder.sh'
+        notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
@@ -135,7 +135,7 @@ else
         wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
     elif [[ "$1" == "--gif" ]]; then
         touch "$gif_pending_file"
-        notify-send "GIF Screen Snip Recording" "Select the region to record" -a 'e-z-recorder.sh'
+        notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
@@ -143,7 +143,7 @@ else
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
     else
-        notify-send "Screen Snip Recording" "Select the region to record" -a 'e-z-recorder.sh'
+        notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
