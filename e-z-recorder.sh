@@ -66,6 +66,12 @@ upload() {
         exit 1
     fi
 
+    if ! jq -e . >/dev/null 2>&1 < $response_file; then
+        notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
+        rm $response_file
+        exit 1
+    fi
+
     cat $response_file
 
     file_url=$(jq -r ".imageUrl" < $response_file)
