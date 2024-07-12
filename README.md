@@ -37,7 +37,7 @@ Now paste that API KEY into the Script
 ## Variables
 * `fps` will be your Max FPS
 * `save` will save your Recorded Videos on `~/Videos`
-* `failsave` will save your Recorded Videos on `~/Videos/e-zoffline` if a upload fails.
+* `failsave` if your Recorded Video upload fails, it will be saved on `~/Videos/e-zoffline`
 
 
 ## Credits
