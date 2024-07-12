@@ -4,6 +4,7 @@ auth=""
 url="https://api.e-z.host/files"
 fps=60
 save=false
+failsave=true
 
 gif_pending_file="/tmp/gif_pending"
 
@@ -58,6 +59,10 @@ upload() {
             notify-send "Error $http_status occurred while uploading, Try again later." -a "e-z-recorder.sh"
         fi
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
+        if [[ "$failsave" == true ]]; then
+            mkdir -p ~/Videos/e-zoffline
+            mv "$file" ~/Videos/e-zoffline/
+        fi
         exit 1
     fi
 
