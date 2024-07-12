@@ -135,14 +135,14 @@ else
         else
             notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
         fi
-        wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
+        wf-recorder -o $(getactivemonitor) --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
     elif [[ "$1" == "--fullscreen" ]]; then
         if [[ "$save" == true ]]; then
             notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
         else
             notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
         fi
-        wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
+        wf-recorder -o $(getactivemonitor) --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
     elif [[ "$1" == "--gif" ]]; then
         touch "$gif_pending_file"
         notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
@@ -151,7 +151,7 @@ else
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
             exit 1
         fi
-        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+        wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
     else
         notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
@@ -159,6 +159,6 @@ else
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
             exit 1
         fi
-        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+        wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
     fi
 fi
