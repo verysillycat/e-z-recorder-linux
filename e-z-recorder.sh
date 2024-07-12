@@ -11,6 +11,12 @@ if [[ -z "$url" ]]; then
     exit 1
 fi
 
+if [ "$XDG_SESSION_TYPE" = "x11" ]; then
+    echo "Error: wf-recorder is not compatible with X11."
+    notify-send "This script is not compatible with X11." -a "e-z-recorder.sh"
+    exit 1
+fi
+
 getdate() {
     date '+%Y-%m-%d_%H.%M.%S'
 }
@@ -18,11 +24,7 @@ getaudiooutput() {
     pactl list sources | grep 'Name' | grep 'monitor' | cut -d ' ' -f2
 }
 getactivemonitor() {
-    if [ "$XDG_SESSION_TYPE" = "x11" ]; then
-        active_monitor=$(xrandr --listmonitors | grep "\*" | awk '{print $4}')
-    elif [ "$XDG_SESSION_TYPE" = "wayland" ]; then
-        active_monitor=$(wlr-randr | grep "\*" | awk '{print $4}')
-    fi
+    active_monitor=$(wlr-randr | grep "\*" | awk '{print $4}')
 }
 
 gif() {
