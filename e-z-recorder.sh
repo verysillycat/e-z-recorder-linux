@@ -12,7 +12,7 @@ if [[ -z "$url" ]]; then
 fi
 
 if [ "$XDG_SESSION_TYPE" = "x11" ]; then
-    echo "Error: wf-recorder is not compatible with X11."
+    echo "Error: wf-recorder is Wayland Only."
     notify-send "This script is not compatible with X11." -a "e-z-recorder.sh"
     exit 1
 fi
