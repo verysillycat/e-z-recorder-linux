@@ -69,7 +69,7 @@ upload() {
 
     file_url=$(jq -r ".imageUrl" < $response_file)
     if [[ "$file_url" != "null" ]]; then
-        echo "$file_url" | xclip -sel c
+        echo "$file_url" | wl-copy
         if [[ "$is_gif" == "--gif" ]]; then
             notify-send "GIF URL copied to clipboard" -a "e-z-recorder.sh"
             rm "$gif_pending_file"
