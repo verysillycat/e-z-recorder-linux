@@ -3,7 +3,7 @@
 #### Recording Videos & Uploading them to [e-z.host](https://e-z.host) with region, GIF, and sound support.
 <br><br>
 ## Dependencies
-`jq`, `xclip`, `slurp`, `ffmpeg` & `wf-recorder`
+`jq`, `wl-clipboard`, `slurp`, & `wf-recorder`
 <details>
 <summary>How to install them?</summary>
 Go to your prefered terminal and execute this command depending on your Distro.
