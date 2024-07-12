@@ -8,10 +8,10 @@
 <summary>How to install them?</summary>
 Go to your prefered terminal and execute this command depending on your Distro.
 
-- **Debian/Ubuntu**: `sudo apt install wf-recorder jq xclip slurp ffmpeg`
-- **Fedora**: `sudo dnf install wf-recorder jq xclip slurp ffmpeg`
-- **Arch**: `sudo pacman -S wf-recorder jq xclip slurp ffmpeg`
-- **Gentoo**: `sudo emerge -av gui-apps/wf-recorder app-misc/jq x11-misc/xclip gui-apps/slurp media-video/ffmpeg`
+- **Debian/Ubuntu**: `sudo apt install wf-recorder jq wl-clipboard slurp`
+- **Fedora**: `sudo dnf install wf-recorder jq wl-clipboard slurp`
+- **Arch**: `sudo pacman -S wf-recorder jq wl-clipboard slurp`
+- **Gentoo**: `sudo emerge -av gui-apps/wf-recorder app-misc/jq x11-misc/wl-clipboard gui-apps/slurp`
 
 </details>
 
