@@ -39,4 +39,4 @@ Now paste that API KEY into the Script
 
 
 ## Credits
-This script was is based on [End's Dotfiles Record script](https://github.com/end-4/dots-hyprland/blob/main/.config/ags/scripts/record-script.sh) but also to allow monitor support for all DEs
+This script was is based on [End's Dotfiles Record script](https://github.com/end-4/dots-hyprland/blob/main/.config/ags/scripts/record-script.sh) but also to detect active monitor support all Wayland DEs, and GIF Output.
