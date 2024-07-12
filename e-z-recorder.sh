@@ -46,27 +46,22 @@ upload() {
         notify-send "Error: File not found: $file" -a "e-z-recorder.sh"
         exit 1
     fi
-    curl -X POST -F "file=@${file}" -H "key: ${auth}" -v "${url}" 2>/dev/null > $response_file
+
+    http_status=$(curl -X POST -F "file=@${file}" -H "key: ${auth}" -w "%{http_code}" -o $response_file -s "${url}")
+
+    if [[ "$http_status" -ne 200 ]]; then
+        if [[ "$http_status" -eq 413 ]]; then
+            notify-send "Error: File too large to upload." -a "e-z-recorder.sh"
+        elif [[ "$http_status" -eq 000 ]]; then
+            notify-send "Error: Check your Internet connection." -a "e-z-recorder.sh"
+        else
+            notify-send "Error $http_status occurred while uploading, Try again later." -a "e-z-recorder.sh"
+        fi
+        [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
+        exit 1
+    fi
 
     cat $response_file
-
-    if ! jq -e . >/dev/null 2>&1 < $response_file; then
-        notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
-        rm $response_file
-        exit 1
-    fi
-
-    success=$(jq -r ".success" < $response_file)
-    if [[ "$success" != "true" ]] || [[ "$success" == "null" ]]; then
-        error=$(jq -r ".error" < $response_file)
-        if [[ "$error" == "null" ]]; then
-            notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
-        else
-            notify-send "Error: $error" -a "e-z-recorder.sh"
-        fi
-        rm $response_file
-        exit 1
-    fi
 
     file_url=$(jq -r ".imageUrl" < $response_file)
     if [[ "$file_url" != "null" ]]; then
