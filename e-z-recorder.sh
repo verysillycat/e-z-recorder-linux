@@ -47,7 +47,6 @@ upload() {
     fi
     curl -X POST -F "file=@${file}" -H "key: ${auth}" -v "${url}" 2>/dev/null > $response_file
 
-    echo "Server response:"
     cat $response_file
 
     if ! jq -e . >/dev/null 2>&1 < $response_file; then
@@ -72,10 +71,10 @@ upload() {
     if [[ "$file_url" != "null" ]]; then
         echo "$file_url" | wl-copy
         if [[ "$is_gif" == "--gif" ]]; then
-            notify-send "GIF URL copied to clipboard" -a "e-z-recorder.sh"
+            notify-send -i link "GIF URL copied to clipboard" -a "e-z-recorder.sh"
             rm "$gif_pending_file"
         else
-            notify-send "Video URL copied to clipboard" -a "e-z-recorder.sh"
+            notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
         fi
         if [[ "$save" == false ]]; then
             rm "$file"
@@ -111,12 +110,8 @@ if pgrep wf-recorder > /dev/null; then
         upload "$video_file"
     fi
 else
-    if [[ "$save" == true ]]; then
-        notify-send "Starting recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
-    else
-        notify-send "Starting recording" 'Started' -a 'e-z-recorder.sh'
-    fi
     if [[ "$1" == "--sound" ]]; then
+        notify-send "Screen Snip Recording" "Select the region to record" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
@@ -124,11 +119,22 @@ else
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" & disown
     elif [[ "$1" == "--fullscreen-sound" ]]; then
+        if [[ "$save" == true ]]; then
+            notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
+        else
+            notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
+        fi
         wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" & disown
     elif [[ "$1" == "--fullscreen" ]]; then
+        if [[ "$save" == true ]]; then
+            notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
+        else
+            notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
+        fi
         wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' & disown
     elif [[ "$1" == "--gif" ]]; then
         touch "$gif_pending_file"
+        notify-send "GIF Screen Snip Recording" "Select the region to record" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
@@ -136,6 +142,7 @@ else
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" & disown
     else
+        notify-send "Screen Snip Recording" "Select the region to record" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
