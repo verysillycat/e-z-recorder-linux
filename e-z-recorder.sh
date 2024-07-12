@@ -125,7 +125,7 @@ else
         notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
+            notify-send "Recording Aborting" 'Aborted' -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
@@ -148,7 +148,7 @@ else
         notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
+            notify-send "Recording Aborting" 'Aborted' -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
@@ -156,7 +156,7 @@ else
         notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
+            notify-send "Recording Aborting" 'Aborted' -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
