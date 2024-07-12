@@ -24,7 +24,8 @@ getaudiooutput() {
     pactl list sources | grep 'Name' | grep 'monitor' | cut -d ' ' -f2
 }
 getactivemonitor() {
-    active_monitor=$(wlr-randr | grep "\*" | awk '{print $4}')
+    active_monitor=$(wlr-randr --json | jq -r '.[] | select(.enabled == true) | .name')
+    echo "$active_monitor"
 }
 
 gif() {
