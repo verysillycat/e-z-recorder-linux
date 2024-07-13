@@ -53,9 +53,9 @@ upload() {
         notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
         rm $response_file
         [[ "$failsave" == true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
+        [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
         exit 1
     fi
-    [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
 
     success=$(jq -r ".success" < $response_file)
     if [[ "$success" != "true" ]] || [[ "$success" == "null" ]]; then
@@ -66,6 +66,7 @@ upload() {
             notify-send "Error: $error" -a "e-z-recorder.sh"
         fi
         [[ "$failsave" == true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
+        [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
         rm $response_file
         exit 1
     fi
