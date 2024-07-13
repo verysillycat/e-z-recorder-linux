@@ -14,7 +14,7 @@ if [[ -z "$url" ]]; then
 fi
 
 if [ "$XDG_SESSION_TYPE" = "x11" ]; then
-    echo "Error: wf-recorder is Wayland Only."
+    echo "Error: wf-recorder only works under Wayland."
     notify-send "This script is not compatible with X11." -a "e-z-recorder.sh"
     exit 1
 fi
@@ -47,36 +47,28 @@ upload() {
         notify-send "Error: File not found: $file" -a "e-z-recorder.sh"
         exit 1
     fi
-
-    http_status=$(curl -X POST -F "file=@${file}" -H "key: ${auth}" -w "%{http_code}" -o $response_file -s "${url}")
-
-    if [[ "$http_status" -ne 200 ]]; then
-        if [[ "$http_status" -eq 413 ]]; then
-            notify-send "Error: File too large to upload." -a "e-z-recorder.sh"
-        elif [[ "$http_status" -eq 000 ]]; then
-            notify-send "Error: Check your Internet connection." -a "e-z-recorder.sh"
-        else
-            notify-send "Error: $http_status occurred while uploading, Try again later." -a "e-z-recorder.sh"
-        fi
-        [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
-        if [[ "$failsave" == true ]]; then
-            mkdir -p ~/Videos/e-zfailed
-            mv "$file" ~/Videos/e-zfailed/
-        fi
-        exit 1
-    fi
+    curl -X POST -F "file=@${file}" -H "key: ${auth}" -v "${url}" 2>/dev/null > $response_file
 
     if ! jq -e . >/dev/null 2>&1 < $response_file; then
         notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
         rm $response_file
-        if [[ "$failsave" == true ]]; then
-            mkdir -p ~/Videos/e-zfailed
-            mv "$file" ~/Videos/e-zfailed/
-        fi
+        [[ "$failsave" == true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
         exit 1
     fi
+    [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
 
-    cat $response_file
+    success=$(jq -r ".success" < $response_file)
+    if [[ "$success" != "true" ]] || [[ "$success" == "null" ]]; then
+        error=$(jq -r ".error" < $response_file)
+        if [[ "$error" == "null" ]]; then
+            notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
+        else
+            notify-send "Error: $error" -a "e-z-recorder.sh"
+        fi
+        [[ "$failsave" == true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
+        rm $response_file
+        exit 1
+    fi
 
     file_url=$(jq -r ".imageUrl" < $response_file)
     if [[ "$file_url" != "null" ]]; then
