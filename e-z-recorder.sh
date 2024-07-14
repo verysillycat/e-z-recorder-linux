@@ -52,7 +52,7 @@ upload() {
     if ! jq -e . >/dev/null 2>&1 < $response_file; then
         notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
         rm $response_file
-        [[ "$failsave" == true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
+        [[ "$failsave" == true && "$1" != "--abort" ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
         exit 1
     fi
@@ -65,7 +65,7 @@ upload() {
         else
             notify-send "Error: $error" -a "e-z-recorder.sh"
         fi
-        [[ "$failsave" == true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
+        [[ "$failsave" == true && "$1" != "--abort" ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
         rm $response_file
         exit 1
@@ -96,6 +96,24 @@ else
     cd /tmp || exit
 fi
 
+if [[ "$1" == "--abort" ]]; then
+    if pgrep wf-recorder > /dev/null; then
+        notify-send "Recording Aborted" "The upload has been canceled." -a 'e-z-recorder.sh'
+        pkill wf-recorder
+        if [[ -f "$gif_pending_file" ]]; then
+            rm "$gif_pending_file"
+        fi
+        if [[ "$save" == false ]]; then
+            video_file=$(ls -t recording_*.mp4 | head -n 1)
+            rm "$video_file"
+        fi
+        exit 0
+    else
+        notify-send "No Recording in Progress" "There is no recording to cancel." -a 'e-z-recorder.sh'
+        exit 0
+    fi
+fi
+
 if pgrep wf-recorder > /dev/null; then
     if [[ -f "$gif_pending_file" || "$1" == "--gif" ]]; then
         notify-send -t 5000 "Recording is being converted to GIF" "Please Wait.." -a 'e-z-recorder.sh' &
@@ -118,7 +136,7 @@ else
         notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "Recording Aborting" 'Aborted' -a 'e-z-recorder.sh'
+            notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
@@ -141,7 +159,7 @@ else
         notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "Recording Aborting" 'Aborted' -a 'e-z-recorder.sh'
+            notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
@@ -149,7 +167,7 @@ else
         notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
         region=$(slurp)
         if [[ -z "$region" ]]; then
-            notify-send "Recording Aborting" 'Aborted' -a 'e-z-recorder.sh'
+            notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
             exit 1
         fi
         wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown

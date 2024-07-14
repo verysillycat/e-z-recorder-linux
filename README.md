@@ -29,6 +29,7 @@ Now paste that API KEY into the Script
 </details>
 
 ## Arguments
+* `--abort` abort recording and the upload
 * `--sound` snip with sound 
 * `--fullscreen` full screen without sound
 * `--fullscreen-sound` fullscreen with sound
