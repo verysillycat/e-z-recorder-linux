@@ -13,12 +13,6 @@ if [[ -z "$url" ]]; then
     exit 1
 fi
 
-if [ "$XDG_SESSION_TYPE" = "x11" ]; then
-    echo "Error: wf-recorder only works under Wayland."
-    notify-send "This script is not compatible with X11." -a "e-z-recorder.sh"
-    exit 1
-fi
-
 getdate() {
     date '+%Y-%m-%d_%H.%M.%S'
 }
@@ -26,7 +20,11 @@ getaudiooutput() {
     pactl list sources | grep 'Name' | grep 'monitor' | cut -d ' ' -f2
 }
 getactivemonitor() {
-    active_monitor=$(wlr-randr --json | jq -r '.[] | select(.enabled == true) | .name')
+    if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+        active_monitor=$(xrandr --query | grep " connected" | grep -o '^[^ ]*')
+    else
+        active_monitor=$(wlr-randr --json | jq -r '.[] | select(.enabled == true) | .name')
+    fi
     echo "$active_monitor"
 }
 
@@ -73,7 +71,11 @@ upload() {
 
     file_url=$(jq -r ".imageUrl" < $response_file)
     if [[ "$file_url" != "null" ]]; then
-        echo "$file_url" | wl-copy
+        if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+            echo "$file_url" | xclip -selection clipboard
+        else
+            echo "$file_url" | wl-copy
+        fi
         if [[ "$is_gif" == "--gif" ]]; then
             notify-send -i link "GIF URL copied to clipboard" -a "e-z-recorder.sh"
             rm "$gif_pending_file"
@@ -97,79 +99,180 @@ else
 fi
 
 if [[ "$1" == "--abort" ]]; then
-    if pgrep wf-recorder > /dev/null; then
-        notify-send "Recording Aborted" "The upload has been canceled." -a 'e-z-recorder.sh'
-        pkill wf-recorder
-        if [[ -f "$gif_pending_file" ]]; then
-            rm "$gif_pending_file"
+    if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+        if pgrep ffmpeg > /dev/null; then
+            notify-send "Recording Aborted" "The upload has been canceled." -a 'e-z-recorder.sh'
+            pkill ffmpeg
+            if [[ -f "$gif_pending_file" ]]; then
+                rm "$gif_pending_file"
+            fi
+            if [[ "$save" == false ]]; then
+                video_file=$(ls -t recording_*.mp4 | head -n 1)
+                rm "$video_file"
+            fi
+            exit 0
+        else
+            notify-send "No Recording in Progress" "There is no recording to cancel." -a 'e-z-recorder.sh'
+            exit 0
         fi
-        if [[ "$save" == false ]]; then
-            video_file=$(ls -t recording_*.mp4 | head -n 1)
-            rm "$video_file"
-        fi
-        exit 0
     else
-        notify-send "No Recording in Progress" "There is no recording to cancel." -a 'e-z-recorder.sh'
-        exit 0
+        if pgrep wf-recorder > /dev/null; then
+            notify-send "Recording Aborted" "The upload has been canceled." -a 'e-z-recorder.sh'
+            pkill wf-recorder
+            if [[ -f "$gif_pending_file" ]]; then
+                rm "$gif_pending_file"
+            fi
+            if [[ "$save" == false ]]; then
+                video_file=$(ls -t recording_*.mp4 | head -n 1)
+                rm "$video_file"
+            fi
+            exit 0
+        else
+            notify-send "No Recording in Progress" "There is no recording to cancel." -a 'e-z-recorder.sh'
+            exit 0
+        fi
     fi
 fi
 
-if pgrep wf-recorder > /dev/null; then
-    if [[ -f "$gif_pending_file" || "$1" == "--gif" ]]; then
-        notify-send -t 5000 "Recording is being converted to GIF" "Please Wait.." -a 'e-z-recorder.sh' &
-        pkill wf-recorder &
-        wait
-        sleep 1.5
-        video_file=$(ls -t recording_*.mp4 | head -n 1)
-        gif_file=$(gif "$video_file")
-        upload "$gif_file" "--gif"
+show_help() {
+    echo "Usage: e-z-recorder.sh [ARGUMENTS]"
+    echo ""
+    echo "Arguments:"
+    echo "  --help                 Show this help message and exit"
+    echo "  --abort                Abort the current recording"
+    echo "  --sound                Record a selected region with sound"
+    echo "  --fullscreen           Record the entire screen without sound"
+    echo "  --fullscreen-sound     Record the entire screen with sound"
+    echo "  --gif                  Record a selected region and convert to GIF"
+    echo ""
+}
+
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+    if pgrep ffmpeg > /dev/null; then
+        if [[ -f "$gif_pending_file" || "$1" == "--gif" ]]; then
+            notify-send -t 5000 "Recording is being converted to GIF" "Please Wait.." -a 'e-z-recorder.sh' &
+            pkill ffmpeg &
+            wait
+            sleep 1.5
+            video_file=$(ls -t recording_*.mp4 | head -n 1)
+            gif_file=$(gif "$video_file")
+            upload "$gif_file" "--gif"
+        else
+            notify-send -t 2000 "Recording Stopped" "Stopped" -a 'e-z-recorder.sh' &
+            pkill ffmpeg &
+            wait
+            sleep 1.5
+            video_file=$(ls -t recording_*.mp4 | head -n 1)
+            upload "$video_file"
+        fi
     else
-        notify-send -t 2000 "Recording Stopped" "Stopped" -a 'e-z-recorder.sh' &
-        pkill wf-recorder &
-        wait
-        sleep 1.5
-        video_file=$(ls -t recording_*.mp4 | head -n 1)
-        upload "$video_file"
+        if [[ "$1" == "--sound" ]]; then
+            notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
+            region=$(slop -f "%x,%y %w,%h")
+            if [[ -z "$region" ]]; then
+                notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
+                exit 1
+            fi
+            IFS=', ' read -r x y width height <<< "$region"
+            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -c:v libx264 -preset ultrafast -c:a aac -pix_fmt yuv444p './recording_'"$(getdate)"'.mp4' & disown
+        elif [[ "$1" == "--fullscreen-sound" ]]; then
+            if [[ "$save" == true ]]; then
+                notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
+            else
+                notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
+            fi
+            ffmpeg -video_size $(xdpyinfo | grep dimensions | awk '{print $2}') -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -c:v libx264 -preset ultrafast -c:a aac -pix_fmt yuv444p './recording_'"$(getdate)"'.mp4' & disown
+        elif [[ "$1" == "--fullscreen" ]]; then
+            if [[ "$save" == true ]]; then
+                notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
+            else
+                notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
+            fi
+            ffmpeg -video_size $(xdpyinfo | grep dimensions | awk '{print $2}') -framerate $fps -f x11grab -i $DISPLAY -c:v libx264 -preset ultrafast -pix_fmt yuv444p './recording_'"$(getdate)"'.mp4' & disown
+        elif [[ "$1" == "--gif" ]]; then
+            touch "$gif_pending_file"
+            notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
+            region=$(slop -f "%x,%y %w,%h")
+            if [[ -z "$region" ]]; then
+                notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
+                exit 1
+            fi
+            IFS=', ' read -r x y width height <<< "$region"
+            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -c:v libx264 -preset ultrafast -pix_fmt yuv444p './recording_'"$(getdate)"'.mp4' & disown
+        else
+            notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
+            region=$(slop -f "%x,%y %w,%h")
+            if [[ -z "$region" ]]; then
+                notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
+                exit 1
+            fi
+            IFS=', ' read -r x y width height <<< "$region"
+            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -c:v libx264 -preset ultrafast -pix_fmt yuv444p './recording_'"$(getdate)"'.mp4' & disown
+        fi
     fi
 else
-    if [[ "$1" == "--sound" ]]; then
-        notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
-        region=$(slurp)
-        if [[ -z "$region" ]]; then
-            notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
-            exit 1
-        fi
-        wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
-    elif [[ "$1" == "--fullscreen-sound" ]]; then
-        if [[ "$save" == true ]]; then
-            notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
+    if pgrep wf-recorder > /dev/null; then
+        if [[ -f "$gif_pending_file" || "$1" == "--gif" ]]; then
+            notify-send -t 5000 "Recording is being converted to GIF" "Please Wait.." -a 'e-z-recorder.sh' &
+            pkill wf-recorder &
+            wait
+            sleep 1.5
+            video_file=$(ls -t recording_*.mp4 | head -n 1)
+            gif_file=$(gif "$video_file")
+            upload "$gif_file" "--gif"
         else
-            notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
+            notify-send -t 2000 "Recording Stopped" "Stopped" -a 'e-z-recorder.sh' &
+            pkill wf-recorder &
+            wait
+            sleep 1.5
+            video_file=$(ls -t recording_*.mp4 | head -n 1)
+            upload "$video_file"
         fi
-        wf-recorder -o $(getactivemonitor) --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
-    elif [[ "$1" == "--fullscreen" ]]; then
-        if [[ "$save" == true ]]; then
-            notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
-        else
-            notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
-        fi
-        wf-recorder -o $(getactivemonitor) --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
-    elif [[ "$1" == "--gif" ]]; then
-        touch "$gif_pending_file"
-        notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
-        region=$(slurp)
-        if [[ -z "$region" ]]; then
-            notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
-            exit 1
-        fi
-        wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
     else
-        notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
-        region=$(slurp)
-        if [[ -z "$region" ]]; then
-            notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
-            exit 1
+        if [[ "$1" == "--sound" ]]; then
+            notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
+            region=$(slurp)
+            if [[ -z "$region" ]]; then
+                notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
+                exit 1
+            fi
+            wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
+        elif [[ "$1" == "--fullscreen-sound" ]]; then
+            if [[ "$save" == true ]]; then
+                notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
+            else
+                notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
+            fi
+            wf-recorder -o $(getactivemonitor) --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
+        elif [[ "$1" == "--fullscreen" ]]; then
+            if [[ "$save" == true ]]; then
+                notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
+            else
+                notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
+            fi
+            wf-recorder -o $(getactivemonitor) --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
+        elif [[ "$1" == "--gif" ]]; then
+            touch "$gif_pending_file"
+            notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
+            region=$(slurp)
+            if [[ -z "$region" ]]; then
+                notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
+                exit 1
+            fi
+            wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+        else
+            notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
+            region=$(slurp)
+            if [[ -z "$region" ]]; then
+                notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
+                exit 1
+            fi
+            wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
         fi
-        wf-recorder --pixel-format yuv444p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
     fi
 fi
