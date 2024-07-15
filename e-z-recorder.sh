@@ -1,15 +1,87 @@
 #!/bin/bash
 
+show_help() {
+    echo "Usage: e-z-recorder.sh [ARGUMENTS]"
+    echo ""
+    echo "Arguments:"
+    echo "  --help                 Show this help message and exit"
+    echo "  --abort                Abort the current recording"
+    echo "  --sound                Record a selected region with sound"
+    echo "  --fullscreen           Record the entire screen without sound"
+    echo "  --fullscreen-sound     Record the entire screen with sound"
+    echo "  --gif                  Record a selected region and convert to GIF"
+    echo "  --config               Open the configuration file in the default text editor"
+    echo "  --config-reinstall     Reinstall the configuration file with default settings"
+    echo ""
+}
+
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+config_file="$HOME/.config/e-z-recorder/config.conf"
+
+create_default_config() {
+    mkdir -p "$(dirname "$config_file")"
+    cat <<EOL > "$config_file"
 auth=""
 url="https://api.e-z.host/files"
 fps=60
 save=false
 failsave=true
-
 gif_pending_file="/tmp/gif_pending"
+EOL
+    echo "Default Configuration file created."
+    printf "\e[30m\e[46m $config_file \e[0m\n"
+    printf "\e[1;34mEdit the configuration file to set your E-Z API KEY.\e[0m\n"
+    printf "\e[1;31mOtherwise, the script will not work.\e[0m\n"
+}
+
+if [[ ! -f "$config_file" ]]; then
+    create_default_config
+    exit 0
+fi
+
+source "$config_file"
+
+if [[ "$1" == "--config" ]]; then
+    if command -v xdg-open > /dev/null; then
+        xdg-open "$config_file"
+    elif command -v open > /dev/null; then
+        open "$config_file"
+    elif command -v nvim > /dev/null; then
+        nvim "$config_file"
+    elif command -v nano > /dev/null; then
+        nano "$config_file"
+    else
+        echo "No suitable text editor found. Please open $config_file manually."
+    fi
+    exit 0
+fi
+
+if [[ "$1" == "--config-reinstall" ]]; then
+    read -p "Do you want to reinstall the config file with default settings? (Y/N): " confirm
+    if [[ "$confirm" =~ ^([Yy]|[Yy][Ee][Ss])$ ]]; then
+        create_default_config
+        echo "Configuration file reinstalled with default settings."
+    else
+        echo "Reinstallation canceled."
+    fi
+    exit 0
+fi
+
+if [[ -z "$auth" ]]; then
+    echo "API Key is not set."
+    echo "Edit the configuration file with --config to add your E-Z API KEY."
+    notify-send "API Key is not added." 'Edit the configuration file to add your E-Z API KEY.' -a "e-z-recorder.sh"
+    exit 1
+fi
 
 if [[ -z "$url" ]]; then
-    notify-send "URL is not set." 'Did you copy the Script Correctly?' -a "e-z-recorder.sh"
+    echo "URL is not set."
+    echo "Edit the configuration file with --config to add E-Z's API URL."
+    notify-send "URL is not set." 'Edit the config file to add E-Z's API URL.' -a "e-z-recorder.sh"
     exit 1
 fi
 
@@ -141,24 +213,6 @@ if [[ "$1" == "--abort" ]]; then
             exit 0
         fi
     fi
-fi
-
-show_help() {
-    echo "Usage: e-z-recorder.sh [ARGUMENTS]"
-    echo ""
-    echo "Arguments:"
-    echo "  --help                 Show this help message and exit"
-    echo "  --abort                Abort the current recording"
-    echo "  --sound                Record a selected region with sound"
-    echo "  --fullscreen           Record the entire screen without sound"
-    echo "  --fullscreen-sound     Record the entire screen with sound"
-    echo "  --gif                  Record a selected region and convert to GIF"
-    echo ""
-}
-
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    show_help
-    exit 0
 fi
 
 if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then

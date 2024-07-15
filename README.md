@@ -34,7 +34,7 @@ Go to your prefered terminal and execute this command depending on your Distro.
    ```bash
    git clone https://github.com/verysillycat/e-z-recorder-linux
    cd e-z-wfrecorder-linux
-   # [!] Replace the auth variable with your E-Z API KEY 
+   # [!] Start the script to create the Configuration file
    ./e-z-recorder.sh 
    ```
 <details>
@@ -50,6 +50,8 @@ Now paste that API KEY into the Script
 * `--fullscreen` full screen without sound
 * `--fullscreen-sound` fullscreen with sound
 * `--gif` snip with gif output
+* `--config` open the configuration file in the default text editor
+* `--config-reinstall` reinstall the configuration file with default settings
 
 ## Variables
 * `fps` will be your Max FPS
