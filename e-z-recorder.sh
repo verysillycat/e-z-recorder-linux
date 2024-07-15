@@ -1,5 +1,16 @@
 #!/bin/bash
 
+if [[ $EUID -eq 0 ]]; then
+    echo -e "\e[31mThis script should not be run as root.\e[0m"
+    sleep 3
+    echo
+    read -p "Do you want to proceed anyway? (Y/N): " confirm
+    if [[ ! "$confirm" =~ ^([Yy]|[Yy][Ee][Ss])$ ]]; then
+        echo "Exiting."
+        exit 1
+    fi
+fi
+
 show_help() {
     echo "Usage: e-z-recorder.sh [ARGUMENTS]"
     echo ""
