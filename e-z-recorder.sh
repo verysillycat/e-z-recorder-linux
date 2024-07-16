@@ -82,6 +82,13 @@ if [[ "$1" == "--config-reinstall" ]]; then
     exit 0
 fi
 
+if [[ -z "$url" ]]; then
+    echo "URL is not set."
+    echo "Edit the configuration file with --config to add E-Z's API URL."
+    notify-send "URL is not set." 'Edit the config file to add the E-Z API URL.' -a "e-z-recorder.sh"
+    exit 1
+fi
+
 if [[ -z "$auth" ]]; then
     echo "API Key is not set."
     echo "Edit the configuration file with --config to add your E-Z API KEY."
