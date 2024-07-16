@@ -89,13 +89,6 @@ if [[ -z "$auth" ]]; then
     exit 1
 fi
 
-if [[ -z "$url" ]]; then
-    echo "URL is not set."
-    echo "Edit the configuration file with --config to add E-Z's API URL."
-    notify-send "URL is not set." 'Edit the config file to add E-Z's API URL.' -a "e-z-recorder.sh"
-    exit 1
-fi
-
 getdate() {
     date '+%Y-%m-%d_%H.%M.%S'
 }
