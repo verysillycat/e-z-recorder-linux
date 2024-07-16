@@ -105,7 +105,7 @@ getaudiooutput() {
 }
 getactivemonitor() {
     if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
-        active_monitor=$(xrandr --query | grep " connected" | grep -o '^[^ ]*')
+        active_monitor=$(xdpyinfo | grep dimensions | awk '{print $2}')
     else
         active_monitor=$(wlr-randr --json | jq -r '.[] | select(.enabled == true) | .name')
     fi
@@ -261,21 +261,21 @@ if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
                 exit 1
             fi
             IFS=', ' read -r x y width height <<< "$region"
-            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
         elif [[ "$1" == "--fullscreen-sound" ]]; then
             if [[ "$save" == true ]]; then
                 notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
             else
                 notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
             fi
-            ffmpeg -video_size $(xdpyinfo | grep dimensions | awk '{print $2}') -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
         elif [[ "$1" == "--fullscreen" ]]; then
             if [[ "$save" == true ]]; then
                 notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
             else
                 notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
             fi
-            ffmpeg -video_size $(xdpyinfo | grep dimensions | awk '{print $2}') -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
         elif [[ "$1" == "--gif" ]]; then
             touch "$gif_pending_file"
             notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
@@ -285,7 +285,7 @@ if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
                 exit 1
             fi
             IFS=', ' read -r x y width height <<< "$region"
-            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
         else
             notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
             region=$(slop -f "%x,%y %w,%h")
@@ -294,7 +294,7 @@ if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
                 exit 1
             fi
             IFS=', ' read -r x y width height <<< "$region"
-            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
         fi
     fi
 else
