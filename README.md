@@ -34,7 +34,7 @@ Go to your prefered terminal and execute this command depending on your Distro.
    ```bash
    git clone https://github.com/verysillycat/e-z-recorder-linux
    cd e-z-wfrecorder-linux
-   # [!] Start the script to create the Configuration file
+   # [!] Start the Script to Create the Configuration file
    ./e-z-recorder.sh 
    ```
 <details>
@@ -53,10 +53,11 @@ Now paste that API KEY into the Script
 * `--config` open the configuration file in the default text editor
 * `--config-reinstall` reinstall the configuration file with default settings
 
-## Variables
+## Configuration
 * `fps` will be your Max FPS
 * `save` will save your Recorded Videos on `~/Videos`
 * `failsave` if your Video Recording upload fails, it will be saved on `~/Videos/e-zfailed`
+* `colorworkaround` re-encode videos on upload for color correction, might take longer to upload
 
 
 ## Credits

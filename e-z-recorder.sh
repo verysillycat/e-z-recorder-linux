@@ -41,6 +41,7 @@ url="https://api.e-z.host/files"
 fps=60
 save=false
 failsave=true
+colorworkaround=false
 gif_pending_file="/tmp/gif_pending"
 EOL
     echo "Default Configuration file created."
@@ -226,6 +227,13 @@ if [[ "$1" == "--abort" ]]; then
     fi
 fi
 
+post_process_video() {
+    local input_file=$1
+    local output_file="${input_file%.mp4}_processed.mp4"
+    ffmpeg -i "$input_file" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:v libx264 -preset fast -crf 18 -movflags +faststart -c:a copy "$output_file"
+    mv "$output_file" "$input_file"
+}
+
 if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
     if pgrep ffmpeg > /dev/null; then
         if [[ -f "$gif_pending_file" || "$1" == "--gif" ]]; then
@@ -253,21 +261,21 @@ if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
                 exit 1
             fi
             IFS=', ' read -r x y width height <<< "$region"
-            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
         elif [[ "$1" == "--fullscreen-sound" ]]; then
             if [[ "$save" == true ]]; then
                 notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
             else
                 notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
             fi
-            ffmpeg -video_size $(xdpyinfo | grep dimensions | awk '{print $2}') -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size $(xdpyinfo | grep dimensions | awk '{print $2}') -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
         elif [[ "$1" == "--fullscreen" ]]; then
             if [[ "$save" == true ]]; then
                 notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
             else
                 notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
             fi
-            ffmpeg -video_size $(xdpyinfo | grep dimensions | awk '{print $2}') -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size $(xdpyinfo | grep dimensions | awk '{print $2}') -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
         elif [[ "$1" == "--gif" ]]; then
             touch "$gif_pending_file"
             notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
@@ -277,7 +285,7 @@ if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
                 exit 1
             fi
             IFS=', ' read -r x y width height <<< "$region"
-            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
         else
             notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
             region=$(slop -f "%x,%y %w,%h")
@@ -286,7 +294,7 @@ if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
                 exit 1
             fi
             IFS=', ' read -r x y width height <<< "$region"
-            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+            ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 18 -pix_fmt yuv444p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
         fi
     fi
 else
@@ -305,6 +313,7 @@ else
             wait
             sleep 1.5
             video_file=$(ls -t recording_*.mp4 | head -n 1)
+            [[ "$colorworkaround" == true ]] && post_process_video "$video_file"
             upload "$video_file"
         fi
     else
