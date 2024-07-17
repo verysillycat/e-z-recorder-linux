@@ -426,10 +426,9 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
     if [[ -z "$kooha_dir" ]]; then
         notify-send "Empty Kooha directory" 'Kooha directory is not set in the config file.' -a "e-z-recorder.sh"
         echo "Kooha directory is not set in the config file."
-    exit 1
-fi
+        exit 1
+    fi
 
-if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
     start_time=$(date -d 'mié 17 jul 2024 06:59:01 CST' +%Y-%m-%dT%H:%M:%S)
 
     new_files=$(find "$kooha_dir" -type f -newermt "$start_time" | sort -n)
@@ -453,10 +452,8 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                 fi
             fi
         done
-        if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
-            if [[ "$save" == false ]]; then
-                rm -rf "$kooha_dir"
-            fi
+        if [[ "$save" == false ]]; then
+            rm -rf "$kooha_dir"
         fi
     else
         notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
