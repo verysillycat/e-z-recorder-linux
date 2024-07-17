@@ -26,6 +26,21 @@ show_help() {
     echo ""
 }
 
+if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        echo "Usage: e-z-recorder.sh [ARGUMENTS]"
+        echo ""
+        echo "Arguments:"
+        echo "  --help                 Show this help message and exit"
+        echo "  --abort                Abort the current recording"
+        echo "  --gif                  Record a selected region and convert to GIF"
+        echo "  --config               Open the configuration file in the default text editor"
+        echo "  --config-reinstall     Reinstall the configuration file with default settings"
+        echo ""
+        echo "Note: This help message is specific to Wayland sessions on GNOME or KDE."
+        exit 0
+    fi
+fi
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     show_help
     exit 0
@@ -36,6 +51,8 @@ config_file="$HOME/.config/e-z-recorder/config.conf"
 create_default_config() {
     mkdir -p "$(dirname "$config_file")"
     cat <<EOL > "$config_file"
+# On Kooba, FPS doesn't work you can change that on GUI Preferences.
+## You can also change the file extension, and directory.
 auth=""
 url="https://api.e-z.host/files"
 fps=60
@@ -43,6 +60,8 @@ save=false
 failsave=true
 colorworkaround=false
 gif_pending_file="/tmp/gif_pending"
+
+kooha_dir="$HOME/Videos/Kooha"
 EOL
     echo "Default Configuration file created."
     printf "\e[30m\e[46m $config_file \e[0m\n"
@@ -220,6 +239,18 @@ if [[ "$1" == "--abort" ]]; then
                 rm "$video_file"
             fi
             exit 0
+        elif pgrep kooha > /dev/null; then
+            killall kooha
+            if [[ -f "$gif_pending_file" ]]; then
+                rm "$gif_pending_file"
+            fi
+            if [[ "$save" == false ]]; then
+                video_files=$(find "$kooha_dir" -type f -newermt "$(date -d @$start_time)" | sort -n)
+                for video_file in $video_files; do
+                    rm "$video_file"
+                done
+            fi
+            exit 0
         else
             notify-send "No Recording in Progress" "There is no recording to cancel." -a 'e-z-recorder.sh'
             exit 0
@@ -233,6 +264,72 @@ post_process_video() {
     ffmpeg -i "$input_file" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:v libx264 -preset fast -crf 18 -movflags +faststart -c:a copy "$output_file"
     mv "$output_file" "$input_file"
 }
+
+if [[ -z "$1" || "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "--fullscreen" || "$1" == "--gif" ]]; then
+    start_time=$(date +%s)
+else
+    if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+        echo "Invalid argument: $1. Executing kooha."
+        kooha &
+        kooha_pid=$!
+        wait $kooha_pid
+        exit 0
+    else
+        echo "Invalid argument: $1"
+        exit 1
+    fi
+fi
+
+if [[ "$1" == "--gif" ]]; then
+    touch "$gif_pending_file"
+fi
+
+if pgrep -x "kooha" > /dev/null; then
+    echo "Kooha is already running."
+    echo "For the Videos to Upload, Simply just Close the Window."
+    notify-send "Kooha is already running." -a "e-z-recorder.sh"
+    exit 1
+fi
+kooha &
+kooha_pid=$!
+wait $kooha_pid
+
+if [[ -z "$kooha_dir" ]]; then
+    notify-send "Empty Kooha directory" 'Kooha directory is not set in the config file.' -a "e-z-recorder.sh"
+    echo "Kooha directory is not set in the config file."
+    exit 1
+fi
+
+start_time=$(date -d 'mié 17 jul 2024 06:59:01 CST' +%Y-%m-%dT%H:%M:%S)
+
+new_files=$(find "$kooha_dir" -type f -newermt "$start_time" | sort -n)
+if [[ -n "$new_files" ]]; then
+    for file_path in $new_files; do
+        if [[ -f "$file_path" && -s "$file_path" ]]; then
+            if [[ "$colorworkaround" == true ]]; then
+                post_process_video "$file_path"
+            fi
+
+            if [[ -f "$file_path" ]]; then
+                if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                    gif_file=$(gif "$file_path")
+                    upload "$gif_file" "--gif"
+                else
+                    upload "$file_path"
+                fi
+            else
+                echo "Error: Encoded file not found: $file_path"
+                notify-send "Error: Encoded file not found: $file_path" -a "e-z-recorder.sh"
+            fi
+        fi
+    done
+    if [[ "$save" == false ]]; then
+        rm -rf "$kooha_dir"
+    fi
+else
+    notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
+fi
+exit 0
 
 if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
     if pgrep ffmpeg > /dev/null; then
