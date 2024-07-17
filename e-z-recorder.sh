@@ -422,39 +422,44 @@ else
     fi
 fi
 
-if [[ -z "$kooha_dir" ]]; then
-    notify-send "Empty Kooha directory" 'Kooha directory is not set in the config file.' -a "e-z-recorder.sh"
-    echo "Kooha directory is not set in the config file."
+if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+    if [[ -z "$kooha_dir" ]]; then
+        notify-send "Empty Kooha directory" 'Kooha directory is not set in the config file.' -a "e-z-recorder.sh"
+        echo "Kooha directory is not set in the config file."
     exit 1
 fi
 
-start_time=$(date -d 'mié 17 jul 2024 06:59:01 CST' +%Y-%m-%dT%H:%M:%S)
+if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+    start_time=$(date -d 'mié 17 jul 2024 06:59:01 CST' +%Y-%m-%dT%H:%M:%S)
 
-new_files=$(find "$kooha_dir" -type f -newermt "$start_time" | sort -n)
-if [[ -n "$new_files" ]]; then
-    for file_path in $new_files; do
-        if [[ -f "$file_path" && -s "$file_path" ]]; then
-            if [[ "$colorworkaround" == true ]]; then
-                post_process_video "$file_path"
-            fi
-
-            if [[ -f "$file_path" ]]; then
-                if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
-                    gif_file=$(gif "$file_path")
-                    upload "$gif_file" "--gif"
-                else
-                    upload "$file_path"
+    new_files=$(find "$kooha_dir" -type f -newermt "$start_time" | sort -n)
+    if [[ -n "$new_files" ]]; then
+        for file_path in $new_files; do
+            if [[ -f "$file_path" && -s "$file_path" ]]; then
+                if [[ "$colorworkaround" == true ]]; then
+                    post_process_video "$file_path"
                 fi
-            else
-                echo "Error: Encoded file not found: $file_path"
-                notify-send "Error: Encoded file not found: $file_path" -a "e-z-recorder.sh"
+
+                if [[ -f "$file_path" ]]; then
+                    if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                        gif_file=$(gif "$file_path")
+                        upload "$gif_file" "--gif"
+                    else
+                        upload "$file_path"
+                    fi
+                else
+                    echo "Error: Encoded file not found: $file_path"
+                    notify-send "Error: Encoded file not found: $file_path" -a "e-z-recorder.sh"
+                fi
+            fi
+        done
+        if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+            if [[ "$save" == false ]]; then
+                rm -rf "$kooha_dir"
             fi
         fi
-    done
-    if [[ "$save" == false ]]; then
-        rm -rf "$kooha_dir"
+    else
+        notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
     fi
-else
-    notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
 fi
 exit 0
