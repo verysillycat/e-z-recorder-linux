@@ -40,6 +40,7 @@ Go to your prefered terminal and execute this command depending on your Distro.
 - **Debian/Ubuntu**: `sudo apt install kooha jq wl-clipboard`
 - **Fedora**: `sudo dnf install kooha jq wl-clipboard`
 - **Arch**: `sudo pacman -S kooha jq wl-clipboard`
+- **Gentoo**: `sudo emerge -av media-video/kooha app-misc/jq x11-misc/wl-clipboard`
 
 </details>
 
