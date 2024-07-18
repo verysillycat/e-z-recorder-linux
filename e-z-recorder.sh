@@ -452,11 +452,12 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                 fi
             fi
         done
-        if [[ "$save" == false ]]; then
-            rm -rf "$kooha_dir"
-        fi
     else
-        notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
+        notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
+    fi
+
+    if [[ "$save" == false ]]; then
+        rm -rf "$kooha_dir"
     fi
 fi
 exit 0
