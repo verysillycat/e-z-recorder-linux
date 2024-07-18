@@ -54,7 +54,7 @@ Go to your prefered terminal and execute this command depending on your Distro.
 <details>
 <summary>How to get my API KEY?</summary>
 Log in to E-Z, Click on your User Modal on the top right, Go to Account, and Copy your API KEY<br>
-Now paste that API KEY into the Script
+Now paste that API KEY into auth variable in the Config File
 </details>
 
 ## Arguments
@@ -66,7 +66,7 @@ Now paste that API KEY into the Script
 * `--gif` snip with gif output
 * `--config` open the configuration file in the default text editor
 * `--config-reinstall` reinstall the configuration file with default settings 
-##### ★ Note: When using Kooha, you'll not see some of these arguments as they aren't needed. 
+##### ★ When using Kooha, you'll not see some of these arguments as they aren't needed. 
 
 ## Configuration
 * `fps` will be your Max FPS
