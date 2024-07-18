@@ -73,7 +73,7 @@ Now paste that API KEY into the Script
 * `save` will save your Recorded Videos on `~/Videos`
 * `failsave` if your Video Recording upload fails, it will be saved on `~/Videos/e-zfailed`
 * `colorworkaround` re-encode videos on upload for color correction, might take longer to upload
-* `kooha_dir` set the kooha directory, will also save videos in here
+* `kooha_dir` set the kooha directory, also save videos in here if using kooha
 
 
 ## Credits
