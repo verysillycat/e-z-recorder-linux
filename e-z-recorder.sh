@@ -47,21 +47,21 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 fi
 
 config_file="$HOME/.config/e-z-recorder/config.conf"
-
 create_default_config() {
     mkdir -p "$(dirname "$config_file")"
     cat <<EOL > "$config_file"
 # On Kooba, FPS doesn't work you can change that on GUI Preferences.
-## You can also change the file extension, and directory.
+## Aswell as the file extension, and directory in there.
 auth=""
 url="https://api.e-z.host/files"
 fps=60
 save=false
 failsave=true
 colorworkaround=false
-gif_pending_file="/tmp/gif_pending"
-
 kooha_dir="$HOME/Videos/Kooha"
+
+gif_pending_file="/tmp/gif_pending"
+kooha_last_time="$(dirname "$config_file")/last_upload_time"
 EOL
     echo "Default Configuration file created."
     printf "\e[30m\e[46m $config_file \e[0m\n"
@@ -100,6 +100,13 @@ if [[ "$1" == "--config-reinstall" ]]; then
         echo "Reinstallation canceled."
     fi
     exit 0
+fi
+
+if [[ "$save" == true && "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+    if [[ ! -f "$kooha_last_time" ]]; then
+        touch "$kooha_last_time"
+    fi
+    echo $(date +%s) > "$kooha_last_time"
 fi
 
 if [[ -z "$url" ]]; then
@@ -183,6 +190,9 @@ upload() {
 
     file_url=$(jq -r ".imageUrl" < $response_file)
     if [[ "$file_url" != "null" ]]; then
+        if [[ "$save" == true && "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+            echo $(date +%s) > "$kooha_last_time"
+        fi
         if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
             echo "$file_url" | xclip -selection clipboard
         else
@@ -240,15 +250,15 @@ if [[ "$1" == "--abort" ]]; then
             fi
             exit 0
         elif pgrep kooha > /dev/null; then
-            killall kooha
-            if [[ -f "$gif_pending_file" ]]; then
-                rm "$gif_pending_file"
+            notify-send "Recording Aborted" "The upload has been canceled." -a 'e-z-recorder.sh'
+            parent_pid=$(pgrep -f "kooha" | xargs -I {} ps -o ppid= -p {})
+            if [[ -n "$parent_pid" ]]; then
+                echo $(date +%s) > "$kooha_last_time"
+                killall kooha && kill -KILL "$parent_pid"
             fi
-            if [[ "$save" == false ]]; then
-                video_files=$(find "$kooha_dir" -type f -newermt "$(date -d @$start_time)" | sort -n)
-                for video_file in $video_files; do
-                    rm "$video_file"
-                done
+            if [[ -d "$kooha_dir" ]]; then
+                abort_time=$(date +%s)
+                find "$kooha_dir" -type f -name "*.mp4" -not -newermt "@$abort_time" -exec rm {} \;
             fi
             exit 0
         else
@@ -429,31 +439,32 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
         exit 1
     fi
 
-    start_time=$(date -d 'mié 17 jul 2024 06:59:01 CST' +%Y-%m-%dT%H:%M:%S)
-
-    new_files=$(find "$kooha_dir" -type f -newermt "$start_time" | sort -n)
-    if [[ -n "$new_files" ]]; then
-        for file_path in $new_files; do
-            if [[ -f "$file_path" && -s "$file_path" ]]; then
-                if [[ "$colorworkaround" == true ]]; then
-                    post_process_video "$file_path"
-                fi
-
-                if [[ -f "$file_path" ]]; then
-                    if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
-                        gif_file=$(gif "$file_path")
-                        upload "$gif_file" "--gif"
-                    else
-                        upload "$file_path"
+    if [[ "$save" == true ]]; then
+        last_upload_time=$(cat "$kooha_last_time" 2>/dev/null || echo 0)
+        new_files=$(find "$kooha_dir" -type f -newermt "@$last_upload_time" | sort -n)
+        if [[ -n "$new_files" ]]; then
+            for file_path in $new_files; do
+                if [[ -f "$file_path" && -s "$file_path" ]]; then
+                    if [[ "$colorworkaround" == true ]]; then
+                        post_process_video "$file_path"
                     fi
-                else
-                    echo "Error: Encoded file not found: $file_path"
-                    notify-send "Error: Encoded file not found: $file_path" -a "e-z-recorder.sh"
+
+                    if [[ -f "$file_path" ]]; then
+                        if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                            gif_file=$(gif "$file_path")
+                            upload "$gif_file" "--gif"
+                        else
+                            upload "$file_path"
+                        fi
+                    else
+                        echo "Error: Encoded file not found: $file_path"
+                        notify-send "Error: Encoded file not found: $file_path" -a "e-z-recorder.sh"
+                    fi
                 fi
-            fi
-        done
-    else
-        notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
+            done
+        else
+            notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
+        fi
     fi
 
     if [[ "$save" == false ]]; then
