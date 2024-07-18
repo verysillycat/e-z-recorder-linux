@@ -199,10 +199,14 @@ upload() {
             echo "$file_url" | wl-copy
         fi
         if [[ "$is_gif" == "--gif" ]]; then
-            notify-send -i link "GIF URL copied to clipboard" -a "e-z-recorder.sh"
+            if [[ "$XDG_SESSION_TYPE" != "wayland" || ("$XDG_CURRENT_DESKTOP" != "GNOME" && "$XDG_CURRENT_DESKTOP" != "KDE") ]]; then
+                notify-send -i link "GIF URL copied to clipboard" -a "e-z-recorder.sh"
+            fi
             rm "$gif_pending_file"
         else
-            notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
+            if [[ "$XDG_SESSION_TYPE" != "wayland" || ("$XDG_CURRENT_DESKTOP" != "GNOME" && "$XDG_CURRENT_DESKTOP" != "KDE") ]]; then
+                notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
+            fi
         fi
         if [[ "$save" == false ]]; then
             rm "$file"
@@ -258,7 +262,7 @@ if [[ "$1" == "--abort" ]]; then
             fi
             if [[ -d "$kooha_dir" ]]; then
                 abort_time=$(date +%s)
-                find "$kooha_dir" -type f -name "*.mp4" -not -newermt "@$abort_time" -exec rm {} \;
+                find "$kooha_dir" -type f -name "*.mp4" -newermt "@$abort_time" -exec rm {} \;
             fi
             exit 0
         else
@@ -279,13 +283,8 @@ if [[ -z "$1" || "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "-
     start_time=$(date +%s)
 else
     if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
-        echo "Invalid argument: $1. Executing kooha."
-        kooha &
-        kooha_pid=$!
-        wait $kooha_pid
-        exit 0
-    else
         echo "Invalid argument: $1"
+        notify-send "Invalid argument: $1" -a "e-z-recorder.sh"
         exit 1
     fi
 fi
@@ -443,7 +442,9 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
         last_upload_time=$(cat "$kooha_last_time" 2>/dev/null || echo 0)
         new_files=$(find "$kooha_dir" -type f -newermt "@$last_upload_time" | sort -n)
         if [[ -n "$new_files" ]]; then
+            file_count=0
             for file_path in $new_files; do
+                ((file_count++))
                 if [[ -f "$file_path" && -s "$file_path" ]]; then
                     if [[ "$colorworkaround" == true ]]; then
                         post_process_video "$file_path"
@@ -453,21 +454,80 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                         if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
                             gif_file=$(gif "$file_path")
                             upload "$gif_file" "--gif"
+                            if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
+                                notify-send "GIF Recording $file_count uploaded" "Recording $file_count of $(echo $new_files | wc -w) uploaded successfully." -a "e-z-recorder.sh"
+                            fi
                         else
                             upload "$file_path"
+                            if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
+                                notify-send "Recording $file_count uploaded" "Recording $file_count of $(echo $new_files | wc -w) uploaded successfully." -a "e-z-recorder.sh"
+                            fi
                         fi
                     else
                         echo "Error: Encoded file not found: $file_path"
                         notify-send "Error: Encoded file not found: $file_path" -a "e-z-recorder.sh"
                     fi
                 fi
+                if (( file_count % 2 == 0 )); then
+                    sleep 4
+                fi
             done
+            if [[ $(echo $new_files | wc -w) -eq 1 ]]; then
+                if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                    notify-send -i link "GIF URL copied to clipboard" -a "e-z-recorder.sh"
+                else
+                    notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
+                fi
+            fi
         else
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
         fi
     fi
 
     if [[ "$save" == false ]]; then
+        last_upload_time=$(cat "$kooha_last_time" 2>/dev/null || echo 0)
+        new_files=$(find "$kooha_dir" -type f -newermt "@$last_upload_time" | sort -n)
+        if [[ -n "$new_files" ]]; then
+            file_count=0
+            for file_path in $new_files; do
+                ((file_count++))
+                if [[ -f "$file_path" && -s "$file_path" ]]; then
+                    if [[ "$colorworkaround" == true ]]; then
+                        post_process_video "$file_path"
+                    fi
+
+                    if [[ -f "$file_path" ]]; then
+                        if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                            gif_file=$(gif "$file_path")
+                            upload "$gif_file" "--gif"
+                            if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
+                                notify-send -i link "#$file_count GIF Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied" -a "e-z-recorder.sh"
+                            fi
+                        else
+                            upload "$file_path"
+                            if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
+                                notify-send -i link "#$file_count Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied." -a "e-z-recorder.sh"
+                            fi
+                        fi
+                    else
+                        echo "Error: Encoded file not found: $file_path"
+                        notify-send "Error: Encoded file not found: $file_path" -a "e-z-recorder.sh"
+                    fi
+                fi
+                if (( file_count % 2 == 0 )); then
+                    sleep 3.5
+                fi
+            done
+            if [[ $(echo $new_files | wc -w) -eq 1 ]]; then
+                if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                    notify-send -i link "GIF URL copied to clipboard" -a "e-z-recorder.sh"
+                else
+                    notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
+                fi
+            fi
+        else
+            notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
+        fi
         rm -rf "$kooha_dir"
     fi
 fi
