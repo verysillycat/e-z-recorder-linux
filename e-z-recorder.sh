@@ -455,12 +455,12 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                             gif_file=$(gif "$file_path")
                             upload "$gif_file" "--gif"
                             if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
-                                notify-send "GIF Recording $file_count uploaded" "Recording $file_count of $(echo $new_files | wc -w) uploaded successfully." -a "e-z-recorder.sh"
+                                notify-send -i link "#$file_count GIF Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied." -a "e-z-recorder.sh"
                             fi
                         else
                             upload "$file_path"
                             if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
-                                notify-send "Recording $file_count uploaded" "Recording $file_count of $(echo $new_files | wc -w) uploaded successfully." -a "e-z-recorder.sh"
+                                notify-send -i link "#$file_count Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied." -a "e-z-recorder.sh"
                             fi
                         fi
                     else
