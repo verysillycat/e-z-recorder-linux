@@ -47,7 +47,7 @@ Go to your prefered terminal and execute this command depending on your Distro.
 ## Installation
    ```bash
    git clone https://github.com/verysillycat/e-z-recorder-linux
-   cd e-z-wfrecorder-linux
+   cd e-z-recorder-linux
    # [!] Start the Script to Create the Configuration file
    ./e-z-recorder.sh 
    ```
