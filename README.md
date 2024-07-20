@@ -1,7 +1,7 @@
 # E-Z Linux Recorder [<img src="https://r2.e-z.host/9e3dd702-42ab-4d6b-a8a0-b1a4ab53af33/35jx47l1.png" width="225" align="left" alt="E-Z Record Logo">](https://github.com/verysillycat/e-z-recorder-linux)
-[![e-z-recorder-bin](https://img.shields.io/badge/e--z--recorder--bin-3E3E3E?style=flat&logo=arch-linux&logoColor=3d67db&labelColor=%23171717)](https://aur.archlinux.org/packages/e-z-recorder-bin)
-#### Recording Videos & Uploading them to [e-z.host](https://e-z.host) with region, GIF, and sound support.
-<br><br>
+#### Screen Recording & Uploading to [e-z.host](https://e-z.host) with region, GIF and sound support.
+[![e-z-recorder](https://img.shields.io/badge/e--z--recorder-3E3E3E?style=flat&logo=arch-linux&logoColor=3d67db&labelColor=%23171717)](https://aur.archlinux.org/packages/e-z-recorder)
+<br><br><br>
 ## Wayland Dependencies
 `jq`, `wl-clipboard`, `slurp` & `wf-recorder`
 
@@ -31,7 +31,7 @@ Go to your prefered terminal and execute this command depending on your Distro.
 </details>
 
 ## GNOME / KDE Wayland
-`jq`, `wl-clipboard`, & `kooha`
+`jq`, `wl-clipboard` & `kooha`
 
 <details>
 <summary>How to install them?</summary>
@@ -77,4 +77,4 @@ Now paste that API KEY into auth variable in the Config File
 
 
 ## Credits
-This script was is based on [End's Dotfiles Record script](https://github.com/end-4/dots-hyprland/blob/main/.config/ags/scripts/record-script.sh) but also to detect active monitor support all Wayland DEs, and GIF Output.
+This script was is based on [End's Dotfiles Record script](https://github.com/end-4/dots-hyprland/blob/main/.config/ags/scripts/record-script.sh) but to support alot more DEs, Configuration, allow GIF Output & more.
