@@ -528,7 +528,10 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
         else
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
         fi
-        rm -rf "$kooha_dir"
+        recording_count=$(find "$kooha_dir" -type f \( -name "*.mp4" -o -name "*.webm" -o -name "*.gif" \) | wc -l)
+        if (( recording_count <= 1 )); then
+            rm -rf "$kooha_dir"
+        fi
     fi
 fi
 exit 0
