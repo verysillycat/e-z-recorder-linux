@@ -11,7 +11,6 @@
 <summary>How to install them?</summary>
 
 Go to your prefered terminal and execute this command depending on your Distro.
->
  | Compositor        | Distribution              | Instructions                                                                          |
  | ------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------- |
 | **Wayland**           | **Debian/Ubuntu**         | `sudo apt install wf-recorder jq wl-clipboard slurp`                                                                      |
