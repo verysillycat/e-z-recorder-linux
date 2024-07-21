@@ -46,47 +46,48 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     exit 0
 fi
 
-config_file="$HOME/.config/e-z-recorder/config.conf"
+config_file="~/.config/e-z-recorder/config.conf"
 create_default_config() {
-    mkdir -p "$(dirname "$config_file")"
-    cat <<EOL > "$config_file"
-# On Kooba, FPS doesn't work you can change that on GUI Preferences.
+    mkdir -p "$(dirname "$(eval echo $config_file)")"
+    cat <<EOL > "$(eval echo $config_file)"
+# On Kooba, FPS & Encoder doesn't work but you can change FPS on GUI Preferences.
 ## Aswell as the file extension, and directory in there.
 auth=""
 url="https://api.e-z.host/files"
 fps=60
+encoder=libx264
 save=false
 failsave=true
 colorworkaround=false
-kooha_dir="$HOME/Videos/Kooha"
+kooha_dir="~/Videos/Kooha"
 
 gif_pending_file="/tmp/gif_pending"
-kooha_last_time="$(dirname "$config_file")/last_upload_time"
+kooha_last_time="~/.config/e-z-recorder/last_upload_time"
 EOL
     echo "Default Configuration file created."
-    printf "\e[30m\e[46m $config_file \e[0m\n"
+    printf "\e[30m\e[46m $(eval echo $config_file) \e[0m\n"
     printf "\e[1;34mEdit the configuration file to set your E-Z API KEY.\e[0m\n"
     printf "\e[1;31mOtherwise, the script will not work.\e[0m\n"
 }
 
-if [[ ! -f "$config_file" ]]; then
+if [[ ! -f "$(eval echo $config_file)" ]]; then
     create_default_config
     exit 0
 fi
 
-source "$config_file"
+source "$(eval echo $config_file)"
 
 if [[ "$1" == "--config" ]]; then
     if command -v xdg-open > /dev/null; then
-        xdg-open "$config_file"
+        xdg-open "$(eval echo $config_file)"
     elif command -v open > /dev/null; then
-        open "$config_file"
+        open "$(eval echo $config_file)"
     elif command -v nvim > /dev/null; then
-        nvim "$config_file"
+        nvim "$(eval echo $config_file)"
     elif command -v nano > /dev/null; then
-        nano "$config_file"
+        nano "$(eval echo $config_file)"
     else
-        echo "No suitable text editor found. Please open $config_file manually."
+        echo "No suitable text editor found. Please open $(eval echo $config_file) manually."
     fi
     exit 0
 fi
@@ -103,10 +104,10 @@ if [[ "$1" == "--config-reinstall" ]]; then
 fi
 
 if [[ "$save" == true && "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
-    if [[ ! -f "$kooha_last_time" ]]; then
-        touch "$kooha_last_time"
+    if [[ ! -f "$(eval echo $kooha_last_time)" ]]; then
+        touch "$(eval echo $kooha_last_time)"
     fi
-    echo $(date +%s) > "$kooha_last_time"
+    echo $(date +%s) > "$(eval echo $kooha_last_time)"
 fi
 
 if [[ -z "$url" ]]; then
@@ -120,6 +121,13 @@ if [[ -z "$auth" ]]; then
     echo "API Key is not set."
     echo "Edit the configuration file with --config to add your E-Z API KEY."
     notify-send "API Key is not added." 'Edit the configuration file to add your E-Z API KEY.' -a "e-z-recorder.sh"
+    exit 1
+fi
+
+if [[ -z "$encoder" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE")) ]]; then
+    echo "Encoder is not set."
+    echo "Edit the configuration file with --config to add the encoder."
+    notify-send "Encoder is not set." 'Edit the config file to add the encoder.' -a "e-z-recorder.sh"
     exit 1
 fi
 
@@ -191,7 +199,7 @@ upload() {
     file_url=$(jq -r ".imageUrl" < $response_file)
     if [[ "$file_url" != "null" ]]; then
         if [[ "$save" == true && "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
-            echo $(date +%s) > "$kooha_last_time"
+            echo $(date +%s) > "$(eval echo $kooha_last_time)"
         fi
         if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
             echo "$file_url" | xclip -selection clipboard
@@ -257,12 +265,12 @@ if [[ "$1" == "--abort" ]]; then
             notify-send "Recording Aborted" "The upload has been canceled." -a 'e-z-recorder.sh'
             parent_pid=$(pgrep -f "kooha" | xargs -I {} ps -o ppid= -p {})
             if [[ -n "$parent_pid" ]]; then
-                echo $(date +%s) > "$kooha_last_time"
+                echo $(date +%s) > "$(eval echo $kooha_last_time)"
                 killall kooha && kill -KILL "$parent_pid"
             fi
-            if [[ -d "$kooha_dir" ]]; then
+            if [[ -d "$(eval echo $kooha_dir)" ]]; then
                 abort_time=$(date +%s)
-                find "$kooha_dir" -type f -name "*.mp4" -newermt "@$abort_time" -exec rm {} \;
+                find "$(eval echo $kooha_dir)" -type f -name "*.mp4" -newermt "@$abort_time" -exec rm {} \;
             fi
             exit 0
         else
@@ -275,7 +283,7 @@ fi
 post_process_video() {
     local input_file=$1
     local output_file="${input_file%.mp4}_processed.mp4"
-    ffmpeg -i "$input_file" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:v libx264 -preset fast -crf 20 -movflags +faststart -c:a copy "$output_file"
+    ffmpeg -i "$input_file" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:v $encoder -preset fast -crf 20 -movflags +faststart -c:a copy "$output_file"
     mv "$output_file" "$input_file"
 }
 
@@ -331,21 +339,21 @@ else
                     exit 1
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
-                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--fullscreen-sound" ]]; then
                 if [[ "$save" == true ]]; then
                     notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
                 else
                     notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
                 fi
-                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--fullscreen" ]]; then
                 if [[ "$save" == true ]]; then
                     notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
                 else
                     notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
                 fi
-                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
                 notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
@@ -355,7 +363,7 @@ else
                     exit 1
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
-                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
             else
                 notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
                 region=$(slop -f "%x,%y %w,%h")
@@ -364,7 +372,7 @@ else
                     exit 1
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
-                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
             fi
         fi
     else
@@ -394,21 +402,21 @@ else
                     notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
                     exit 1
                 fi
-                wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
+                wf-recorder --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
             elif [[ "$1" == "--fullscreen-sound" ]]; then
                 if [[ "$save" == true ]]; then
                     notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
                 else
                     notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
                 fi
-                wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
+                wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
             elif [[ "$1" == "--fullscreen" ]]; then
                 if [[ "$save" == true ]]; then
                     notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
                 else
                     notify-send "Starting Recording" 'Started' -a 'e-z-recorder.sh'
                 fi
-                wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
+                wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
                 notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
@@ -417,7 +425,7 @@ else
                     notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
                     exit 1
                 fi
-                wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+                wf-recorder --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
             else
                 notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
                 region=$(slurp)
@@ -425,22 +433,22 @@ else
                     notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
                     exit 1
                 fi
-                wf-recorder --pixel-format yuv420p -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+                wf-recorder --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
             fi
         fi
     fi
 fi
 
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
-    if [[ -z "$kooha_dir" ]]; then
+    if [[ -z "$(eval echo $kooha_dir)" ]]; then
         notify-send "Empty Kooha directory" 'Kooha directory is not set in the config file.' -a "e-z-recorder.sh"
         echo "Kooha directory is not set in the config file."
         exit 1
     fi
 
     if [[ "$save" == true ]]; then
-        last_upload_time=$(cat "$kooha_last_time" 2>/dev/null || echo 0)
-        new_files=$(find "$kooha_dir" -type f -newermt "@$last_upload_time" | sort -n)
+        last_upload_time=$(cat "$(eval echo $kooha_last_time)" 2>/dev/null || echo 0)
+        new_files=$(find "$(eval echo $kooha_dir)" -type f -newermt "@$last_upload_time" | sort -n)
         if [[ -n "$new_files" ]]; then
             file_count=0
             for file_path in $new_files; do
@@ -485,8 +493,8 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
     fi
 
     if [[ "$save" == false ]]; then
-        last_upload_time=$(cat "$kooha_last_time" 2>/dev/null || echo 0)
-        new_files=$(find "$kooha_dir" -type f -newermt "@$last_upload_time" | sort -n)
+        last_upload_time=$(cat "$(eval echo $kooha_last_time)" 2>/dev/null || echo 0)
+        new_files=$(find "$(eval echo $kooha_dir)" -type f -newermt "@$last_upload_time" | sort -n)
         if [[ -n "$new_files" ]]; then
             file_count=0
             for file_path in $new_files; do
@@ -528,9 +536,9 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
         else
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
         fi
-        recording_count=$(find "$kooha_dir" -type f \( -name "*.mp4" -o -name "*.webm" -o -name "*.gif" \) | wc -l)
+        recording_count=$(find "$(eval echo $kooha_dir)" -type f \( -name "*.mp4" -o -name "*.webm" -o -name "*.gif" \) | wc -l)
         if (( recording_count <= 1 )); then
-            rm -rf "$kooha_dir"
+            rm -rf "$(eval echo $kooha_dir)"
         fi
     fi
 fi
