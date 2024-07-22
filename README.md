@@ -63,6 +63,8 @@ Now paste that API KEY into auth variable in the Config File
 * `save` will save your Recorded Videos on `~/Videos`
 * `failsave` if your Video Recording upload fails, it will be saved on `~/Videos/e-zfailed`
 * `colorworkaround` re-encode videos on upload for color correction, might take longer to upload
+* `startnotif` show the start notification or not
+* `endnotif` show the end notification or not
 * `kooha_dir` set the kooha directory, also save videos in here if using kooha
 
 
