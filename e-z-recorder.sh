@@ -171,6 +171,10 @@ upload() {
         content_type="video/mp4"
     elif [[ "$file" == *.gif ]]; then
         content_type="image/gif"
+    elif [[ "$file" == *.mkv ]]; then
+        content_type="video/mkv"
+    elif [[ "$file" == *.webm ]]; then
+        content_type="video/webm"
     else
         content_type="application/octet-stream"
     fi
