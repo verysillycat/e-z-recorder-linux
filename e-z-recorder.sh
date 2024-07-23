@@ -50,11 +50,12 @@ config_file="~/.config/e-z-recorder/config.conf"
 create_default_config() {
     mkdir -p "$(dirname "$(eval echo $config_file)")"
     cat <<EOL > "$(eval echo $config_file)"
-# On Kooba, FPS & Encoder doesn't work but you can change FPS on GUI Preferences.
+# On Kooba FPS, Encoder & Pixel Format doesn't work but you can change FPS on GUI Preferences.
 ## Aswell as the file extension, and directory in there.
 auth=""
 url="https://api.e-z.host/files"
 fps=60
+pixelformat=yuv420p
 encoder=libx264
 save=false
 failsave=true
@@ -285,7 +286,7 @@ fi
 post_process_video() {
     local input_file=$1
     local output_file="${input_file%.mp4}_processed.mp4"
-    ffmpeg -i "$input_file" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:v $encoder -preset fast -crf 20 -movflags +faststart -c:a copy "$output_file"
+    ffmpeg -i "$input_file" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=$pixelformat" -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:v $encoder -preset fast -crf 20 -movflags +faststart -c:a copy "$output_file"
     mv "$output_file" "$input_file"
 }
 
@@ -341,13 +342,13 @@ else
                     exit 1
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
-                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--fullscreen-sound" ]]; then
                 [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
-                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--fullscreen" ]]; then
                 [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
-                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
                 [[ "$startnotif" == true ]] && notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
@@ -357,7 +358,7 @@ else
                     exit 1
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
-                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
             else
                 [[ "$startnotif" == true ]] && notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
                 region=$(slop -f "%x,%y %w,%h")
@@ -366,7 +367,7 @@ else
                     exit 1
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
-                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt yuv420p -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
             fi
         fi
     else
@@ -396,13 +397,13 @@ else
                     notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
                     exit 1
                 fi
-                wf-recorder --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
+                wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
             elif [[ "$1" == "--fullscreen-sound" ]]; then
                 [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
-                wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
+                wf-recorder -o $(getactivemonitor) --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
             elif [[ "$1" == "--fullscreen" ]]; then
                 [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a 'e-z-recorder.sh'
-                wf-recorder -o $(getactivemonitor) --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
+                wf-recorder -o $(getactivemonitor) --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
                 [[ "$startnotif" == true ]] && notify-send "GIF Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
@@ -411,7 +412,7 @@ else
                     notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
                     exit 1
                 fi
-                wf-recorder --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+                wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
             else
                 [[ "$startnotif" == true ]] && notify-send "Screen Snip Recording" "Select the region to Start" -a 'e-z-recorder.sh'
                 region=$(slurp)
@@ -419,7 +420,7 @@ else
                     notify-send "Recording Canceling" 'Canceled' -a 'e-z-recorder.sh'
                     exit 1
                 fi
-                wf-recorder --pixel-format yuv420p -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+                wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
             fi
         fi
     fi
