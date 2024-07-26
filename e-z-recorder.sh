@@ -134,7 +134,7 @@ if [[ -z "$encoder" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DES
     exit 1
 fi
 
-if [[ -z "$encoder" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE")) ]]; then
+if [[ -z "$pixelformat" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE")) ]]; then
     echo "Pixelformat is not set."
     echo "Edit the configuration file with --config to add the pixelformat."
     notify-send "Pixelformat is not set." 'Edit the config file to add the pixelformat.' -a "e-z-recorder.sh"
