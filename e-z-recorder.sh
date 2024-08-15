@@ -284,7 +284,7 @@ if [[ "$1" == "--abort" ]]; then
             fi
             if [[ -d "$(eval echo $kooha_dir)" ]]; then
                 abort_time=$(date +%s)
-                find "$(eval echo $kooha_dir)" -type f -name "*.mp4" -newermt "@$abort_time" -exec rm {} \;
+                find "$(eval echo $kooha_dir)" -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.webm" \) -newermt "@$abort_time" -exec rm {} \;
             fi
             exit 0
         else
