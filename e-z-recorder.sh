@@ -65,7 +65,7 @@ endnotif=true
 kooha_dir="~/Videos/Kooha"
 
 gif_pending_file="/tmp/gif_pending"
-kooha_last_time="~/.config/e-z-recorder/last_upload_time"
+kooha_last_time="~/.config/e-z-recorder/last_time"
 EOL
     echo "Default Configuration file created."
     printf "\e[30m\e[46m $(eval echo $config_file) \e[0m\n"
@@ -104,13 +104,6 @@ if [[ "$1" == "--config-reinstall" ]]; then
         echo "Reinstallation canceled."
     fi
     exit 0
-fi
-
-if [[ "$save" == true && "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
-    if [[ ! -f "$(eval echo $kooha_last_time)" ]]; then
-        touch "$(eval echo $kooha_last_time)"
-    fi
-    echo $(date +%s) > "$(eval echo $kooha_last_time)"
 fi
 
 if [[ -z "$url" ]]; then
@@ -279,12 +272,14 @@ if [[ "$1" == "--abort" ]]; then
             [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been canceled." -a 'e-z-recorder.sh'
             parent_pid=$(pgrep -f "kooha" | xargs -I {} ps -o ppid= -p {})
             if [[ -n "$parent_pid" ]]; then
-                echo $(date +%s) > "$(eval echo $kooha_last_time)"
-                killall kooha && kill -KILL "$parent_pid"
-            fi
             if [[ -d "$(eval echo $kooha_dir)" ]]; then
-                abort_time=$(date +%s)
-                find "$(eval echo $kooha_dir)" -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.webm" \) -newermt "@$abort_time" -exec rm {} \;
+                if [[ -f "$(eval echo $kooha_last_time)" ]]; then
+                    kooha_last_time=$(eval echo $kooha_last_time)
+                    find "$(eval echo $kooha_dir)" -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.webm" \) -newer "$kooha_last_time" -exec rm {} \;
+                    rm "$(eval echo $kooha_last_time)"
+                fi
+            fi
+            killall kooha && kill -KILL "$parent_pid"
             fi
             exit 0
         else
@@ -302,7 +297,7 @@ post_process_video() {
 }
 
 if [[ -z "$1" || "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "--fullscreen" || "$1" == "--gif" ]]; then
-    start_time=$(date +%s)
+    echo $(date +%s) > "$(eval echo $kooha_last_time)"
 else
     if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
         echo "Invalid argument: $1"
@@ -322,6 +317,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
         notify-send "Kooha is already running." -a "e-z-recorder.sh"
         exit 1
     fi
+    echo $(date +%s) > "$(eval echo $kooha_last_time)"
     kooha &
     kooha_pid=$!
     wait $kooha_pid
@@ -446,7 +442,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
 
     if [[ "$save" == true ]]; then
         last_upload_time=$(cat "$(eval echo $kooha_last_time)" 2>/dev/null || echo 0)
-        new_files=$(find "$(eval echo $kooha_dir)" -type f -newermt "@$last_upload_time" | sort -n)
+        new_files=$(find "$(eval echo $kooha_dir)" -type f -newer "$(eval echo $kooha_last_time)" | sort -n)
         if [[ -n "$new_files" ]]; then
             file_count=0
             for file_path in $new_files; do
@@ -485,6 +481,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                     notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
                 fi
             fi
+            rm "$(eval echo $kooha_last_time)"
         else
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
         fi
@@ -492,7 +489,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
 
     if [[ "$save" == false ]]; then
         last_upload_time=$(cat "$(eval echo $kooha_last_time)" 2>/dev/null || echo 0)
-        new_files=$(find "$(eval echo $kooha_dir)" -type f -newermt "@$last_upload_time" | sort -n)
+        new_files=$(find "$(eval echo $kooha_dir)" -type f -newer "$(eval echo $kooha_last_time)" | sort -n)
         if [[ -n "$new_files" ]]; then
             file_count=0
             for file_path in $new_files; do
@@ -531,6 +528,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                     notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
                 fi
             fi
+            rm "$(eval echo $kooha_last_time)"
         else
             notify-send "Recording Aborted" 'Aborted' -a 'e-z-recorder.sh'
         fi
