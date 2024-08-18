@@ -11,8 +11,7 @@ if [[ $EUID -eq 0 ]]; then
     fi
 fi
 
-show_help() {
-    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "Usage: e-z-recorder(.sh) [ARGUMENTS]"
     echo ""
     echo "Arguments:"
@@ -26,8 +25,7 @@ show_help() {
     echo "  --config-reinstall     Reinstall the configuration file with default settings"
     echo ""
     exit 0
-    fi
-}
+fi
 
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
