@@ -67,7 +67,7 @@ Now paste that API KEY into auth variable in the Config File
 * `colorworkaround` re-encode videos on upload for color correction, might take longer to upload
 * `startnotif` show the start notification or not
 * `endnotif` show the end notification or not
-* `directory` set directory to save videos in there will not work with kooha
+* `directory` set directory to save videos in there will be ignored if using kooha
 * `kooha_dir` set the kooha directory also save videos in here if using kooha
 
 
