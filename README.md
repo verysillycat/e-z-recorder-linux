@@ -1,6 +1,6 @@
 # E-Z Linux Recorder [<img src="https://r2.e-z.host/9e3dd702-42ab-4d6b-a8a0-b1a4ab53af33/35jx47l1.png" width="225" align="left" alt="E-Z Record Logo">](https://github.com/verysillycat/e-z-recorder-linux)
 #### Screen Recording & Uploading to [e-z.host](https://e-z.host) with region, GIF and sound support.
-[![e-z-recorder](https://img.shields.io/badge/e--z--recorder-3E3E3E?style=flat&logo=arch-linux&logoColor=3d67db&labelColor=%23171717)](https://aur.archlinux.org/packages/e-z-recorder)
+[![Total Commits](https://img.shields.io/github/commit-activity/t/verysillycat/e-z-recorder-linux?style=flat&logo=github&label=Commits&labelColor=%230f0f0f&color=%23191919)](https://github.com/verysillycat/e-z-recorder-linux/commits/)
 <br><br><br>
 ## Dependencies
 * **Wayland**: `jq`, `wl-clipboard`, `slurp` & `wf-recorder`
@@ -34,6 +34,7 @@ Go to your prefered terminal and execute this command depending on your Distro.
  </details>
 
 ## Installation
+[![e-z-recorder](https://img.shields.io/badge/AVAILABLE_ON_THE_AUR-333232?style=for-the-badge&logo=arch-linux&logoColor=3d67db&labelColor=%23171717)](https://aur.archlinux.org/packages/e-z-recorder)
    ```bash
    git clone https://github.com/verysillycat/e-z-recorder-linux
    cd e-z-recorder-linux
