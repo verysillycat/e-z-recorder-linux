@@ -297,11 +297,13 @@ post_process_video() {
 
 if [[ -z "$1" || "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "--fullscreen" || "$1" == "--gif" ]]; then
     if [[ "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "--fullscreen" ]]; then
-        printf "\e[30m\e[46m$1\e[0m"
-        printf "\e[1;32m is only for X11 or wlroots Compositors as its not needed. \e[0m\n"
-        notify-send "This Argument is only for X11 or wlroots Compositors" "As its not needed." -a "E-Z Recorder"
-        sleep 2
-        exit 1
+        if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+            printf "\e[30m\e[46m$1\e[0m"
+            printf "\e[1;32m is only for X11 or wlroots Compositors as its not needed. \e[0m\n"
+            notify-send "This Argument is only for X11 or wlroots Compositors" "As its not needed." -a "E-Z Recorder"
+            sleep 2
+            exit 1
+        fi
     fi
 else
     if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
