@@ -59,6 +59,7 @@ failsave=true
 colorworkaround=false
 startnotif=true
 endnotif=true
+directory="~/Videos"
 kooha_dir="~/Videos/Kooha"
 
 gif_pending_file="/tmp/gif_pending"
@@ -229,9 +230,9 @@ upload() {
     rm $response_file
 }
 
-if [[ "$save" == true ]]; then
-    mkdir -p "$(xdg-user-dir VIDEOS)"
-    cd "$(xdg-user-dir VIDEOS)" || exit
+if [[ "$save" == true && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE")) ]]; then
+    mkdir -p "$(eval echo $directory)"
+    cd "$(eval echo $directory)" || exit
 else
     cd /tmp || exit
 fi
