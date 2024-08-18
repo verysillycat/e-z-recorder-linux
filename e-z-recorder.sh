@@ -11,22 +11,6 @@ if [[ $EUID -eq 0 ]]; then
     fi
 fi
 
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    echo "Usage: e-z-recorder(.sh) [ARGUMENTS]"
-    echo ""
-    echo "Arguments:"
-    echo "  --help                 Show this help message and exit"
-    echo "  --abort                Abort the current recording"
-    echo "  --sound                Record a selected region with sound"
-    echo "  --fullscreen           Record the entire screen without sound"
-    echo "  --fullscreen-sound     Record the entire screen with sound"
-    echo "  --gif                  Record a selected region and convert to GIF"
-    echo "  --config               Open the configuration file in the default text editor"
-    echo "  --config-reinstall     Reinstall the configuration file with default settings"
-    echo ""
-    exit 0
-fi
-
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         echo "Usage: e-z-recorder(.sh) [ARGUMENTS]"
@@ -41,6 +25,22 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
         echo "Note: This help message is specific to Wayland sessions on GNOME and KDE."
         exit 0
     fi
+fi
+
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: e-z-recorder(.sh) [ARGUMENTS]"
+    echo ""
+    echo "Arguments:"
+    echo "  --help                 Show this help message and exit"
+    echo "  --abort                Abort the current recording"
+    echo "  --sound                Record a selected region with sound"
+    echo "  --fullscreen           Record the entire screen without sound"
+    echo "  --fullscreen-sound     Record the entire screen with sound"
+    echo "  --gif                  Record a selected region and convert to GIF"
+    echo "  --config               Open the configuration file in the default text editor"
+    echo "  --config-reinstall     Reinstall the configuration file with default settings"
+    echo ""
+    exit 0
 fi
 
 config_file="~/.config/e-z-recorder/config.conf"
