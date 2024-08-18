@@ -12,7 +12,8 @@ if [[ $EUID -eq 0 ]]; then
 fi
 
 show_help() {
-    echo "Usage: e-z-recorder.sh [ARGUMENTS]"
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: e-z-recorder(.sh) [ARGUMENTS]"
     echo ""
     echo "Arguments:"
     echo "  --help                 Show this help message and exit"
@@ -24,26 +25,24 @@ show_help() {
     echo "  --config               Open the configuration file in the default text editor"
     echo "  --config-reinstall     Reinstall the configuration file with default settings"
     echo ""
+    exit 0
+    fi
 }
 
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-        echo "Usage: e-z-recorder.sh [ARGUMENTS]"
+        echo "Usage: e-z-recorder(.sh) [ARGUMENTS]"
         echo ""
         echo "Arguments:"
         echo "  --help                 Show this help message and exit"
         echo "  --abort                Abort the current recording"
-        echo "  --gif                  Record a selected region and convert to GIF"
+        echo "  --gif                  Record a Video and convert to GIF"
         echo "  --config               Open the configuration file in the default text editor"
         echo "  --config-reinstall     Reinstall the configuration file with default settings"
         echo ""
-        echo "Note: This help message is specific to Wayland sessions on GNOME or KDE."
+        echo "Note: This help message is specific to Wayland sessions on GNOME and KDE."
         exit 0
     fi
-fi
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    show_help
-    exit 0
 fi
 
 config_file="~/.config/e-z-recorder/config.conf"
@@ -109,28 +108,28 @@ fi
 if [[ -z "$url" ]]; then
     echo "URL is not set."
     echo "Edit the configuration file with --config to add E-Z's API URL."
-    notify-send "URL is not set." 'Edit the config file to add the E-Z API URL.' -a "e-z-recorder.sh"
+    notify-send "URL is not set." 'Edit the config file to add the E-Z API URL.' -a "E-Z Recorder"
     exit 1
 fi
 
 if [[ -z "$auth" ]]; then
     echo "API Key is not set."
     echo "Edit the configuration file with --config to add your E-Z API KEY."
-    notify-send "API Key is not added." 'Edit the configuration file to add your E-Z API KEY.' -a "e-z-recorder.sh"
+    notify-send "API Key is not added." 'Edit the configuration file to add your E-Z API KEY.' -a "E-Z Recorder"
     exit 1
 fi
 
 if [[ -z "$encoder" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE")) ]]; then
     echo "Encoder is not set."
     echo "Edit the configuration file with --config to add the encoder."
-    notify-send "Encoder is not set." 'Edit the config file to add the encoder.' -a "e-z-recorder.sh"
+    notify-send "Encoder is not set." 'Edit the config file to add the encoder.' -a "E-Z Recorder"
     exit 1
 fi
 
 if [[ -z "$pixelformat" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE")) ]]; then
     echo "Pixelformat is not set."
     echo "Edit the configuration file with --config to add the pixelformat."
-    notify-send "Pixelformat is not set." 'Edit the config file to add the pixelformat.' -a "e-z-recorder.sh"
+    notify-send "Pixelformat is not set." 'Edit the config file to add the pixelformat.' -a "E-Z Recorder"
     exit 1
 fi
 
@@ -163,7 +162,7 @@ upload() {
     response_file="/tmp/uploadvideo.json"
 
     if [[ ! -f "$file" ]]; then
-        notify-send "Error: File not found: $file" -a "e-z-recorder.sh"
+        notify-send "Error: File not found: $file" -a "E-Z Recorder"
         exit 1
     fi
 
@@ -182,7 +181,7 @@ upload() {
     curl -X POST -F "file=@${file};type=${content_type}" -H "key: ${auth}" -v "${url}" 2>/dev/null > $response_file
 
     if ! jq -e . >/dev/null 2>&1 < $response_file; then
-        notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
+        notify-send "Error occurred while uploading. Please try again later." -a "E-Z Recorder"
         rm $response_file
         [[ "$failsave" == true && "$1" != "--abort" ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
@@ -193,9 +192,9 @@ upload() {
     if [[ "$success" != "true" ]] || [[ "$success" == "null" ]]; then
         error=$(jq -r ".error" < $response_file)
         if [[ "$error" == "null" ]]; then
-            notify-send "Error occurred while uploading. Please try again later." -a "e-z-recorder.sh"
+            notify-send "Error occurred while uploading. Please try again later." -a "E-Z Recorder"
         else
-            notify-send "Error: $error" -a "e-z-recorder.sh"
+            notify-send "Error: $error" -a "E-Z Recorder"
         fi
         [[ "$failsave" == true && "$1" != "--abort" ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
@@ -215,19 +214,19 @@ upload() {
         fi
         if [[ "$is_gif" == "--gif" ]]; then
             if [[ "$XDG_SESSION_TYPE" != "wayland" || ("$XDG_CURRENT_DESKTOP" != "GNOME" && "$XDG_CURRENT_DESKTOP" != "KDE") ]]; then
-                notify-send -i link "GIF URL copied to clipboard" -a "e-z-recorder.sh"
+                notify-send -i link "GIF URL copied to clipboard" -a "E-Z Recorder"
             fi
             rm "$gif_pending_file"
         else
             if [[ "$XDG_SESSION_TYPE" != "wayland" || ("$XDG_CURRENT_DESKTOP" != "GNOME" && "$XDG_CURRENT_DESKTOP" != "KDE") ]]; then
-                notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
+                notify-send -i link "Video URL copied to clipboard" -a "E-Z Recorder"
             fi
         fi
         if [[ "$save" == false ]]; then
             rm "$file"
         fi
     else
-        notify-send "Error: File URL is null" -a "e-z-recorder.sh"
+        notify-send "Error: File URL is null" -a "E-Z Recorder"
     fi
     rm $response_file
 }
@@ -297,11 +296,17 @@ post_process_video() {
 }
 
 if [[ -z "$1" || "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "--fullscreen" || "$1" == "--gif" ]]; then
-    echo $(date +%s) > "$(eval echo $kooha_last_time)"
+    if [[ "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "--fullscreen" ]]; then
+        printf "\e[30m\e[46m$1\e[0m"
+        printf "\e[1;32m is only for X11 or wlroots Compositors as its not needed. \e[0m\n"
+        notify-send "This Argument is only for X11 or wlroots Compositors" "As its not needed." -a "E-Z Recorder"
+        sleep 2
+        exit 1
+    fi
 else
     if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
         echo "Invalid argument: $1"
-        notify-send "Invalid argument: $1" -a "e-z-recorder.sh"
+        notify-send "Invalid argument: $1" -a "E-Z Recorder"
         exit 1
     fi
 fi
@@ -314,7 +319,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
     if pgrep -x "kooha" > /dev/null; then
         echo "Kooha is already running."
         echo "For the Videos to Upload, Simply just Close the Window."
-        notify-send "Kooha is already running." -a "e-z-recorder.sh"
+        notify-send "Kooha is already running." -a "E-Z Recorder"
         exit 1
     fi
     echo $(date +%s) > "$(eval echo $kooha_last_time)"
@@ -435,7 +440,7 @@ fi
 
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
     if [[ -z "$(eval echo $kooha_dir)" ]]; then
-        notify-send "Empty Kooha directory" 'Kooha directory is not set in the config file.' -a "e-z-recorder.sh"
+        notify-send "Empty Kooha directory" 'Kooha directory is not set in the config file.' -a "E-Z Recorder"
         echo "Kooha directory is not set in the config file."
         exit 1
     fi
@@ -457,17 +462,17 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                             gif_file=$(gif "$file_path")
                             upload "$gif_file" "--gif"
                             if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
-                                notify-send -i link "#$file_count GIF Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied." -a "e-z-recorder.sh"
+                                notify-send -i link "#$file_count GIF Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied." -a "E-Z Recorder"
                             fi
                         else
                             upload "$file_path"
                             if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
-                                notify-send -i link "#$file_count Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied." -a "e-z-recorder.sh"
+                                notify-send -i link "#$file_count Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied." -a "E-Z Recorder"
                             fi
                         fi
                     else
                         echo "Error: Encoded file not found: $file_path"
-                        notify-send "Error: Encoded file not found: $file_path" -a "e-z-recorder.sh"
+                        notify-send "Error: Encoded file not found: $file_path" -a "E-Z Recorder"
                     fi
                 fi
                 if (( file_count % 2 == 0 )); then
@@ -476,9 +481,9 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
             done
             if [[ $(echo $new_files | wc -w) -eq 1 ]]; then
                 if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
-                    notify-send -i link "GIF URL copied to clipboard" -a "e-z-recorder.sh"
+                    notify-send -i link "GIF URL copied to clipboard" -a "E-Z Recorder"
                 else
-                    notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
+                    notify-send -i link "Video URL copied to clipboard" -a "E-Z Recorder"
                 fi
             fi
             rm "$(eval echo $kooha_last_time)"
@@ -504,17 +509,17 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                             gif_file=$(gif "$file_path")
                             upload "$gif_file" "--gif"
                             if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
-                                notify-send -i link "#$file_count GIF Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied" -a "e-z-recorder.sh"
+                                notify-send -i link "#$file_count GIF Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied" -a "E-Z Recorder"
                             fi
                         else
                             upload "$file_path"
                             if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
-                                notify-send -i link "#$file_count Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied." -a "e-z-recorder.sh"
+                                notify-send -i link "#$file_count Recording uploaded" "$file_count of $(echo $new_files | wc -w) URLs have been Copied." -a "E-Z Recorder"
                             fi
                         fi
                     else
                         echo "Error: Encoded file not found: $file_path"
-                        notify-send "Error: Encoded file not found: $file_path" -a "e-z-recorder.sh"
+                        notify-send "Error: Encoded file not found: $file_path" -a "E-Z Recorder"
                     fi
                 fi
                 if (( file_count % 2 == 0 )); then
@@ -523,9 +528,9 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
             done
             if [[ $(echo $new_files | wc -w) -eq 1 ]]; then
                 if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
-                    notify-send -i link "GIF URL copied to clipboard" -a "e-z-recorder.sh"
+                    notify-send -i link "GIF URL copied to clipboard" -a "E-Z Recorder"
                 else
-                    notify-send -i link "Video URL copied to clipboard" -a "e-z-recorder.sh"
+                    notify-send -i link "Video URL copied to clipboard" -a "E-Z Recorder"
                 fi
             fi
             rm "$(eval echo $kooha_last_time)"
