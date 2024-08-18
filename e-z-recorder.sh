@@ -357,10 +357,18 @@ else
                 IFS=', ' read -r x y width height <<< "$region"
                 ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--fullscreen-sound" ]]; then
-                [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
+                if [[ "$save" == true ]]; then
+                    [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
+                else
+                    [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
+                fi
                 ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--fullscreen" ]]; then
-                [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
+                if [[ "$save" == true ]]; then
+                    [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
+                else
+                    [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
+                fi
                 ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
@@ -412,10 +420,18 @@ else
                 fi
                 wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
             elif [[ "$1" == "--fullscreen-sound" ]]; then
-                [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
+                if [[ "$save" == true ]]; then
+                    [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
+                else
+                    [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
+                fi
                 wf-recorder -o $(getactivemonitor) --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
             elif [[ "$1" == "--fullscreen" ]]; then
-                [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
+                if [[ "$save" == true ]]; then
+                    [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
+                else
+                    [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
+                fi
                 wf-recorder -o $(getactivemonitor) --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
