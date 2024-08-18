@@ -323,6 +323,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
         exit 1
     fi
     echo $(date +%s) > "$(eval echo $kooha_last_time)"
+    mkdir -p "$(eval echo $kooha_dir)"
     kooha &
     kooha_pid=$!
     wait $kooha_pid
@@ -439,11 +440,12 @@ else
 fi
 
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
-    if [[ -z "$(eval echo $kooha_dir)" ]]; then
-        notify-send "Empty Kooha directory" 'Kooha directory is not set in the config file.' -a "E-Z Recorder"
-        echo "Kooha directory is not set in the config file."
-        exit 1
+    if [[ -z "$new_files" ]]; then
+        echo "NOTE: If you Recorded something in Kooha Before Closing, and you're seeing this."
+        echo "Then Kooha's Directory Location isn't the same as the config."
+        echo "If you meant to Close Kooha with no Recordings, then you're good to go."
     fi
+fi
 
     if [[ "$save" == true ]]; then
         last_upload_time=$(cat "$(eval echo $kooha_last_time)" 2>/dev/null || echo 0)
@@ -453,12 +455,12 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
             for file_path in $new_files; do
                 ((file_count++))
                 if [[ -f "$file_path" && -s "$file_path" ]]; then
-                    if [[ "$colorworkaround" == true ]]; then
+                    if [[ "$colorworkaround" == true && "${file_path##*.}" != "gif" ]]; then
                         post_process_video "$file_path"
                     fi
 
                     if [[ -f "$file_path" ]]; then
-                        if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                        if [[ "$1" == "--gif" || "${file_path##*.}" == "gif" ]]; then
                             gif_file=$(gif "$file_path")
                             upload "$gif_file" "--gif"
                             if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
@@ -480,7 +482,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                 fi
             done
             if [[ $(echo $new_files | wc -w) -eq 1 ]]; then
-                if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                if [[ "$1" == "--gif" || "${file_path##*.}" == "gif" ]]; then
                     notify-send -i link "GIF URL copied to clipboard" -a "E-Z Recorder"
                 else
                     notify-send -i link "Video URL copied to clipboard" -a "E-Z Recorder"
@@ -500,12 +502,12 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
             for file_path in $new_files; do
                 ((file_count++))
                 if [[ -f "$file_path" && -s "$file_path" ]]; then
-                    if [[ "$colorworkaround" == true ]]; then
+                    if [[ "$colorworkaround" == true && "${file_path##*.}" != "gif" ]]; then
                         post_process_video "$file_path"
                     fi
 
                     if [[ -f "$file_path" ]]; then
-                        if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                        if [[ "$1" == "--gif" || "${file_path##*.}" == "gif" ]]; then
                             gif_file=$(gif "$file_path")
                             upload "$gif_file" "--gif"
                             if [[ $(echo $new_files | wc -w) -gt 1 ]]; then
@@ -527,7 +529,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
                 fi
             done
             if [[ $(echo $new_files | wc -w) -eq 1 ]]; then
-                if [[ "$1" == "--gif" || -f "$gif_pending_file" ]]; then
+                if [[ "$1" == "--gif" || "${file_path##*.}" == "gif" ]]; then
                     notify-send -i link "GIF URL copied to clipboard" -a "E-Z Recorder"
                 else
                     notify-send -i link "Video URL copied to clipboard" -a "E-Z Recorder"
@@ -542,5 +544,4 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
             rm -rf "$(eval echo $kooha_dir)"
         fi
     fi
-fi
 exit 0
