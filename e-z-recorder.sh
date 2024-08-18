@@ -445,7 +445,6 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
         echo "Then Kooha's Directory Location isn't the same as the config."
         echo "If you meant to Close Kooha with no Recordings, then you're good to go."
     fi
-fi
 
     if [[ "$save" == true ]]; then
         last_upload_time=$(cat "$(eval echo $kooha_last_time)" 2>/dev/null || echo 0)
@@ -544,4 +543,6 @@ fi
             rm -rf "$(eval echo $kooha_dir)"
         fi
     fi
+fi
+
 exit 0
