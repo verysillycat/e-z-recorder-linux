@@ -56,6 +56,7 @@ Now paste that API KEY into auth variable in the Config File
 * `--gif` snip with gif output
 * `--config` open the configuration file in the default text editor
 * `--config-reinstall` reinstall the configuration file with default settings
+* `--upload (-u)` upload specified video files (mp4, mkv, webm, gif)
 ##### ★ When using Kooha, you'll not see some of these arguments as they aren't needed.
 
 ## Configuration
