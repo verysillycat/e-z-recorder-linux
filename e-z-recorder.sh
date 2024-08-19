@@ -19,7 +19,7 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
         echo "  --help                 Show this help message and exit"
         echo "  --abort                Abort the current recording"
         echo "  --gif                  Record a Video and convert to GIF"
-        echo "  --upload -u            Upload specified video files (mp4, mkv, webm, gif)"
+        echo "  upload, -u             Upload specified video files (mp4, mkv, webm, gif)"
         echo "  --config               Open the configuration file in the default text editor"
         echo "  --config-reinstall     Reinstall the configuration file with default settings"
         echo ""
@@ -38,7 +38,7 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "  --fullscreen           Record the entire screen without sound"
     echo "  --fullscreen-sound     Record the entire screen with sound"
     echo "  --gif                  Record a selected region and convert to GIF"
-    echo "  --upload, -u           Upload specified video files (mp4, mkv, webm, gif)"
+    echo "  upload, -u             Upload specified video files (mp4, mkv, webm, gif)"
     echo "  --config               Open the configuration file in the default text editor"
     echo "  --config-reinstall     Reinstall the configuration file with default settings"
     echo ""
@@ -184,8 +184,9 @@ upload() {
     if ! jq -e . >/dev/null 2>&1 < $response_file; then
         notify-send "Error occurred while uploading. Please try again later." -a "E-Z Recorder"
         rm $response_file
-        [[ "$failsave" == true && "$1" != "--abort" ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
+        [[ "$failsave" == true && "$1" != "--abort" && "$upload_mode" != true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
+        [[ "$upload_mode" == true ]] && printf "\033[1;31mERROR:\033[0m Upload failed for file: \033[1;34m$filename\033[0m\n"
         exit 1
     fi
 
@@ -197,8 +198,9 @@ upload() {
         else
             notify-send "Error: $error" -a "E-Z Recorder"
         fi
-        [[ "$failsave" == true && "$1" != "--abort" ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
+        [[ "$failsave" == true && "$1" != "--abort" && "$upload_mode" != true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
+        [[ "$upload_mode" == true ]] && printf "\033[1;31mERROR:\033[0m Upload failed for file: \033[1;34m$filename\033[0m\n"
         rm $response_file
         exit 1
     fi
@@ -217,13 +219,13 @@ upload() {
             if [[ "$XDG_SESSION_TYPE" != "wayland" || ("$XDG_CURRENT_DESKTOP" != "GNOME" && "$XDG_CURRENT_DESKTOP" != "KDE") ]]; then
                 notify-send -i link "GIF URL copied to clipboard" -a "E-Z Recorder"
             fi
-        [[ "$is_gif" == "--gif" && "$1" != "-u" && "$1" != "--upload" ]] && rm "$gif_pending_file"
+        [[ "$is_gif" == "--gif" && "$1" != "-u" && "$1" != "upload" ]] && rm "$gif_pending_file"
         else
             if [[ "$XDG_SESSION_TYPE" != "wayland" || ("$XDG_CURRENT_DESKTOP" != "GNOME" && "$XDG_CURRENT_DESKTOP" != "KDE") ]]; then
                 notify-send -i link "Video URL copied to clipboard" -a "E-Z Recorder"
             fi
         fi
-        if [[ "$save" == false ]]; then
+            if [[ "$save" == false && "$upload_mode" != true ]]; then
             rm "$file"
         fi
     else
@@ -232,13 +234,25 @@ upload() {
     rm $response_file
 }
 
-if [[ "$1" == "--upload" || "$1" == "-u" ]]; then
+if [[ "$1" == "upload" || "$1" == "-u" ]]; then
+    upload_mode=true
     lockfile="/tmp/e-z-recorder-upload.lock"
     if [[ -f "$lockfile" ]]; then
-        echo "Another upload process is already running. Exiting."
-        exit 1
+        echo "Another upload process is already running."
+        read -p "Do you want to terminate the other upload process? (Y/N): " confirm
+        if [[ "$confirm" =~ ^([Yy]|[Yy][Ee][Ss])$ ]]; then
+            other_pid=$(cat "$lockfile")
+            if kill -0 "$other_pid" 2>/dev/null; then
+                kill "$other_pid"
+            fi
+        else
+            echo "Waiting for the other upload process to finish..."
+            while [[ -f "$lockfile" ]] && kill -0 $(cat "$lockfile") 2>/dev/null; do
+                sleep 1
+            done
+        fi
     fi
-    touch "$lockfile"
+    echo $$ > "$lockfile"
     trap 'rm -f "$lockfile"; exit' INT TERM EXIT
 
     shift
@@ -262,20 +276,19 @@ if [[ "$1" == "--upload" || "$1" == "-u" ]]; then
     for file in "${files[@]}"; do
         filename=$(basename "$file")
         extension="${filename##*.}"
+        file_key="${file}:${filename}"
 
         if [[ ! " ${valid_extensions[@]} " =~ " ${extension} " ]]; then
-            printf "\033[1m(!)\033[0m Invalid file type: \033[1;34m$filename\033[0m\n"
+            printf "\033[1;5;33m(!)\033[0m Invalid file type: \033[1;34m${filename%.*}\033[4m.${extension}\033[0m\n"
             continue
         fi
 
-        if [[ -n "${processed_files[$file]}" ]]; then
-            printf "\033[1m(!)\033[0m Skipping Duplicated Video: \033[1;34m$filename\033[0m\n"
+        if [[ -n "${processed_files[$file_key]}" ]]; then
+            printf "\033[1;5;33m(!)\033[0m Skipping Duplicated Video: \033[1;34m\033[4m$filename\033[0m\n"
             continue
         fi
-
 
         if [[ ! -f "$file" ]]; then
-
             printf "\033[1m[1/4] \033[0mChecking if\033[1;34m $filename \033[0mexists\n"
             sleep 0.3
             printf "\033[1;31mERROR:\033[0m File not found:\033[1;34m $filename\033[0m\n"
@@ -288,19 +301,17 @@ if [[ "$1" == "--upload" || "$1" == "-u" ]]; then
         sleep 0.2
         printf "\033[1m[3/4]\033[0m Uploading:\033[1;34m $filename \033[0m\n"
         ((file_count++))
-        sleep 0.2
+        sleep 0.1
 
         upload "$file"
         if [[ $? -eq 0 ]]; then
-       if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
-            echo "$file_url" | xclip -selection clipboard
-        else
-            echo "$file_url" | wl-copy
+            if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
+                echo "$file_url" | xclip -selection clipboard
+            else
+                echo "$file_url" | wl-copy
             fi
             printf "\033[1m[4/4]\033[0m Upload successful: \033[1;32m$file_url \033[0m\n"
-            processed_files["$file"]=1
-        else
-            printf "\033[1;31mERROR:\033[0m Upload failed\n: $filename"
+            processed_files["$file_key"]=1
         fi
 
         if (( file_count % 3 == 0 )); then
