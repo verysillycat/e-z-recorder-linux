@@ -273,7 +273,7 @@ if [[ "$1" == "--upload" || "$1" == "-u" ]]; then
             continue
         fi
 
-        
+
         if [[ ! -f "$file" ]]; then
 
             printf "\033[1m[1/4] \033[0mChecking if\033[1;34m $filename \033[0mexists\n"
@@ -541,9 +541,8 @@ fi
 
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
     if [[ -z "$new_files" ]]; then
-        echo "NOTE: If you Recorded something in Kooha Before Closing, and you're seeing this."
-        echo "Then Kooha's Directory Location isn't the same as the config."
-        echo "If you meant to Close Kooha with no Recordings, then you're good to go."
+        echo "NOTE: If you Recorded something in Kooha Before Closing, and the Recording doesn't get uploaded"
+        echo "Then Kooha's Directory Location is mismatched with the config's kooha directory."
     fi
 
     if [[ "$save" == true ]]; then
