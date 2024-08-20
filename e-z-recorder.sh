@@ -160,16 +160,17 @@ gif() {
 spinner() {
     local pid=$1
     local delay=0.1
-    local spinstr='|/-\'
+    local spinstr='|/-\\'
     tput civis && stty -echo
     while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
         local temp=${spinstr#?}
-        printf "\033[36;6m[%c]\033[0m" "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
+        echo -ne "\033[36;6m[${spinstr:0:1}]\033[0m"
+        spinstr=$temp${spinstr%"$temp"}
         sleep $delay
-        printf "\b\b\b"
+        echo -ne "\b\b\b"
     done
-    printf "    \b\b\b\b"
+    echo -ne "\r"
+    tput el
     stty echo && tput cnorm
 }
 
@@ -244,13 +245,12 @@ upload() {
             if [[ "$save" == false && "$upload_mode" != true ]]; then
             rm "$file"
         fi
-        if [[ "$upload_mode" == true ]]; then
-            printf "\033[1m[4/4]\033[0m Upload successful: \033[1;32m$file_url \033[0m\n"
-        fi
     else
         notify-send "Error: File URL is null" -a "E-Z Recorder"
     fi
-    rm $response_file
+    if [[ "$upload_mode" != true ]]; then
+        rm $response_file
+    fi
 }
 
 if [[ "$1" == "upload" || "$1" == "-u" ]]; then
@@ -331,7 +331,13 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
             fi
             processed_files["$file_key"]=1
         fi
-
+        upload_url=$(jq -r ".imageUrl" < /tmp/uploadvideo.json)
+        if [[ $? -eq 0 ]]; then
+            printf "\033[1m[4/4]\033[0m Upload successful: \033[1;32m%s\033[0m\n" "$upload_url"
+            rm /tmp/uploadvideo.json
+        else
+            printf "\033[1;5;31mERROR:\033[0m Failed to upload file: \033[1;34m%s\033[0m\n" "$filename"
+        fi
         if (( file_count % 3 == 0 )); then
             sleep 3.2
         fi
@@ -674,3 +680,4 @@ if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || 
 fi
 
 exit 0
+
