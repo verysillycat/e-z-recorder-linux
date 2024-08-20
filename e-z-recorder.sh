@@ -2,13 +2,8 @@
 
 if [[ $EUID -eq 0 ]]; then
     echo -e "\e[31mThis script should not be run as root.\e[0m"
-    sleep 3
-    echo
-    read -p "Do you want to proceed anyway? (Y/N): " confirm
-    if [[ ! "$confirm" =~ ^([Yy]|[Yy][Ee][Ss])$ ]]; then
-        echo "Exiting."
-        exit 1
-    fi
+    sleep 1.8
+    exit 1
 fi
 
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
@@ -297,8 +292,11 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
         extension="${filename##*.}"
         file_key="${file}:${filename}"
 
-        if [[ ! " ${valid_extensions[@]} " =~ " ${extension} " ]]; then
-            printf "\033[1;5;33m(!)\033[0m Invalid file type: \033[1;34m${filename%.*}\033[4m.${extension}\033[0m\n"
+        if [[ -d "$file" || "$filename" == "$extension" ]]; then
+            printf "\033[1;5;31mERROR:\033[0m \033[1;34m\033[7m$file\033[0m is a Directory.\n"
+            continue
+        elif [[ ! " ${valid_extensions[@]} " =~ " ${extension} " ]]; then
+            printf "\033[1;5;31mERROR:\033[0m Invalid file type: \033[1;34m${filename%.*}\033[4m.${extension}\033[0m\n"
             continue
         fi
 
