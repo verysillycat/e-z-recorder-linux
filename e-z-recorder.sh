@@ -157,14 +157,15 @@ spinner() {
     local delay=0.1
     local spinstr='|/-\\'
     tput civis && stty -echo
+    tput sc 
     while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
         local temp=${spinstr#?}
-        echo -ne "\033[36;6m[${spinstr:0:1}]\033[0m"
+        tput rc
+        printf "\033[36;6m[${spinstr:0:1}]\033[0m"
         spinstr=$temp${spinstr%"$temp"}
         sleep $delay
-        echo -ne "\b\b\b"
     done
-    echo -ne "\r"
+    tput rc 
     tput el
     stty echo && tput cnorm
 }
@@ -316,7 +317,7 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
         sleep 0.2
         printf "\033[1m[2/4]\033[0m\033[1;34m $filename \033[0mfound\n"
         sleep 0.2
-        printf "\033[1m[3/4]\033[0m Uploading:\033[1;34m $filename \033[0m\n"
+        printf "\033[1m[3/4]\033[0m Uploading:\033[1;34m $filename \033[0m"
         ((file_count++))
         upload "$file" &
         spinner $!
@@ -331,10 +332,10 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
             processed_files["$file_key"]=1
         fi
         if [[ $? -eq 0 ]]; then
-            printf "\033[1m[4/4]\033[0m Upload successful: \033[1;32m%s\033[0m\n" "$upload_url"
+            printf "\n\033[1m[4/4]\033[0m Upload successful: \033[1;32m%s\033[0m\n" "$upload_url"
             rm /tmp/uploadvideo.json
         else
-            printf "\033[1;5;31mERROR:\033[0m Failed to upload file: \033[1;34m%s\033[0m\n" "$filename"
+            printf "\n\033[1;5;31mERROR:\033[0m Failed to upload file: \033[1;34m%s\033[0m\n" "$filename"
         fi
         if (( file_count % 3 == 0 )); then
             sleep 3.2
