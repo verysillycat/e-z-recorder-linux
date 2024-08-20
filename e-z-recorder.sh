@@ -576,7 +576,7 @@ fi
 
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
     if [[ -z "$new_files" ]]; then
-        echo "NOTE: If you Recorded something in Kooha Before Closing, and the Recording doesn't get uploaded"
+        echo "NOTE: If you Recorded something in Kooha Before Closing, and the Recording doesn't try to upload"
         echo "Then Kooha's Directory Location is mismatched with the config's kooha directory."
     fi
 
