@@ -323,15 +323,15 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
         upload "$file" &
         spinner $!
 
+        upload_url=$(jq -r ".imageUrl" < /tmp/uploadvideo.json)
         if [[ $? -eq 0 ]]; then
             if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
-                echo "$file_url" | xclip -selection clipboard
+                echo "$upload_url" | xclip -selection clipboard
             else
-                echo "$file_url" | wl-copy
+                echo "$upload_url" | wl-copy
             fi
             processed_files["$file_key"]=1
         fi
-        upload_url=$(jq -r ".imageUrl" < /tmp/uploadvideo.json)
         if [[ $? -eq 0 ]]; then
             printf "\033[1m[4/4]\033[0m Upload successful: \033[1;32m%s\033[0m\n" "$upload_url"
             rm /tmp/uploadvideo.json
