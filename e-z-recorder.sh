@@ -157,7 +157,7 @@ spinner() {
     local delay=0.1
     local spinstr='|/-\\'
     tput civis && stty -echo
-    tput sc 
+    tput sc
     while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
         local temp=${spinstr#?}
         tput rc
@@ -165,7 +165,7 @@ spinner() {
         spinstr=$temp${spinstr%"$temp"}
         sleep $delay
     done
-    tput rc 
+    tput rc
     tput el
     stty echo && tput cnorm
 }
@@ -279,7 +279,7 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
     fi
 
     if [[ ${#files[@]} -ge 5 ]]; then
-        echo "Too many files specified for upload. Please upload fewer than 5 files at a time."
+        printf "\033[1;5;31mERROR:\033[0m Too many files specified for upload. Please upload fewer than 5 files at a time.\n"
         rm -f "$lockfile"
         exit 1
     fi
