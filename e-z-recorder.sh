@@ -278,8 +278,8 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
         exit 1
     fi
 
-    if [[ ${#files[@]} -ge 5 ]]; then
-        printf "\033[1;5;31mERROR:\033[0m Too many files specified for upload. Please upload fewer than 5 files at a time.\n"
+    if [[ ${#files[@]} -ge 6 ]]; then
+        printf "\033[1;5;31mERROR:\033[0m Too many files specified for upload. Please upload fewer than 6 files at a time.\n"
         rm -f "$lockfile"
         exit 1
     fi
@@ -338,7 +338,7 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
             printf "\n\033[1;5;31mERROR:\033[0m Failed to upload file: \033[1;34m%s\033[0m\n" "$filename"
         fi
         if (( file_count % 3 == 0 )); then
-            sleep 3.2
+            sleep 3.8
         fi
     done
 
