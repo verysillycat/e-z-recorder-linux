@@ -389,12 +389,12 @@ if [[ "$1" == "--abort" ]]; then
             if [[ -n "$parent_pid" ]]; then
             if [[ -d "$(eval echo $kooha_dir)" ]]; then
                 if [[ -f "$(eval echo $kooha_last_time)" ]]; then
-                    kooha_last_time=$(eval echo $kooha_last_time)
-                    find "$(eval echo $kooha_dir)" -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.webm" \) -newer "$kooha_last_time" -exec rm {} \;
-                    rm "$(eval echo $kooha_last_time)"
+                    read_kooha_last_time=$(cat "$(eval echo $kooha_last_time)")
+                    find "$(eval echo $kooha_dir)" -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.webm" \) -newer "$read_kooha_last_time" -exec rm {} \;
+                        rm "$(eval echo $kooha_last_time)"
+                    fi
                 fi
-            fi
-            killall kooha && kill -KILL "$parent_pid"
+                killall kooha && kill -KILL "$parent_pid"
             fi
             exit 0
         else
