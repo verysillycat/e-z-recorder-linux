@@ -6,7 +6,7 @@ if [[ $EUID -eq 0 ]]; then
     exit 1
 fi
 
-if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC") ]]; then
     if [[ "$1" == "--help" || "$1" == "-h" ]]; then
         echo "Usage: e-z-recorder(.sh) [ARGUMENTS]"
         echo ""
@@ -115,14 +115,14 @@ if [[ -z "$auth" ]]; then
     exit 1
 fi
 
-if [[ -z "$encoder" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE")) ]]; then
+if [[ -z "$encoder" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC")) ]]; then
     echo "Encoder is not set."
     echo "Edit the configuration file with --config to add the encoder."
     notify-send "Encoder is not set." 'Edit the config file to add the encoder.' -a "E-Z Recorder"
     exit 1
 fi
 
-if [[ -z "$pixelformat" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE")) ]]; then
+if [[ -z "$pixelformat" && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC")) ]]; then
     echo "Pixelformat is not set."
     echo "Edit the configuration file with --config to add the pixelformat."
     notify-send "Pixelformat is not set." 'Edit the config file to add the pixelformat.' -a "E-Z Recorder"
@@ -220,7 +220,7 @@ upload() {
 
     file_url=$(jq -r ".imageUrl" < $response_file)
     if [[ "$file_url" != "null" ]]; then
-        if [[ "$save" == true && "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+        if [[ "$save" == true && "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC") ]]; then
             echo $(date +%s) > "$(eval echo $kooha_last_time)"
         fi
         if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
@@ -347,7 +347,7 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
     exit 0
 fi
 
-if [[ "$save" == true && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE")) ]]; then
+if [[ "$save" == true && ! ("$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC")) ]]; then
     mkdir -p "$(eval echo $directory)"
     cd "$(eval echo $directory)" || exit
 else
@@ -413,7 +413,7 @@ post_process_video() {
 
 if [[ -z "$1" || "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "--fullscreen" || "$1" == "--gif" ]]; then
     if [[ "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "--fullscreen" ]]; then
-        if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+        if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC") ]]; then
             printf "\e[30m\e[46m$1\e[0m"
             printf "\e[1;32m is only for X11 or wlroots Compositors as its not needed. \e[0m\n"
             notify-send "This Argument is only for X11 or wlroots Compositors" "As its not needed." -a "E-Z Recorder"
@@ -422,7 +422,7 @@ if [[ -z "$1" || "$1" == "--sound" || "$1" == "--fullscreen-sound" || "$1" == "-
         fi
     fi
 else
-    if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+    if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC") ]]; then
         echo "Invalid argument: $1"
         notify-send "Invalid argument: $1" -a "E-Z Recorder"
         exit 1
@@ -433,7 +433,7 @@ if [[ "$1" == "--gif" ]]; then
     touch "$gif_pending_file"
 fi
 
-if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC") ]]; then
     if pgrep -x "kooha" > /dev/null; then
         echo "Kooha is already running."
         echo "For the Videos to Upload, Simply just Close the Window."
@@ -573,7 +573,7 @@ else
     fi
 fi
 
-if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE") ]]; then
+if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC") ]]; then
     if [[ -z "$new_files" ]]; then
         echo "NOTE: If you Recorded something in Kooha Before Closing, and the Recording doesn't try to upload"
         echo "Then Kooha's Directory Location is mismatched with the config's kooha directory."
