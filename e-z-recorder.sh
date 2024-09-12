@@ -251,7 +251,6 @@ upload() {
 
 if [[ "$1" == "upload" || "$1" == "-u" ]]; then
     upload_mode=true
-    lockfile="$(eval echo $HOME/.config/e-z-recorder/upload.lck)"
     if [[ -f "$lockfile" ]]; then
         other_pid=$(cat "$lockfile")
         if kill -0 "$other_pid" 2>/dev/null; then
@@ -433,6 +432,26 @@ if [[ "$1" == "--gif" ]]; then
     touch "$gif_pending_file"
 fi
 
+lockfile="$(eval echo $HOME/.config/e-z-recorder/script.lck)"
+
+acquire_lock() {
+    if [[ -f "$lockfile" ]]; then
+        other_pid=$(cat "$lockfile")
+        if kill -0 "$other_pid" 2>/dev/null; then
+            echo "Another instance of slurp or slop is already running."
+            exit 1
+        else
+            echo $$ > "$lockfile"
+        fi
+    else
+        echo $$ > "$lockfile"
+    fi
+}
+
+release_lock() {
+    rm -f "$lockfile"
+}
+
 if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC") ]]; then
     if pgrep -x "kooha" > /dev/null; then
         echo "Kooha is already running."
@@ -466,6 +485,8 @@ else
             fi
         else
             if [[ "$1" == "--sound" ]]; then
+                acquire_lock
+                trap release_lock EXIT
                 [[ "$startnotif" == true ]] && notify-send "Screen Snip Recording" "Select the region to Start" -a "E-Z Recorder"
                 region=$(slop -f "%x,%y %w,%h")
                 if [[ -z "$region" ]]; then
@@ -474,6 +495,8 @@ else
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
                 ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+                release_lock
+                trap - EXIT
             elif [[ "$1" == "--fullscreen-sound" ]]; then
                 if [[ "$save" == true ]]; then
                     [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
@@ -490,6 +513,8 @@ else
                 ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
+                acquire_lock
+                trap release_lock EXIT
                 [[ "$startnotif" == true ]] && notify-send "GIF Screen Snip Recording" "Select the region to Start" -a "E-Z Recorder"
                 region=$(slop -f "%x,%y %w,%h")
                 if [[ -z "$region" ]]; then
@@ -498,7 +523,11 @@ else
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
                 ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                release_lock
+                trap - EXIT
             else
+                acquire_lock
+                trap release_lock EXIT
                 [[ "$startnotif" == true ]] && notify-send "Screen Snip Recording" "Select the region to Start" -a "E-Z Recorder"
                 region=$(slop -f "%x,%y %w,%h")
                 if [[ -z "$region" ]]; then
@@ -507,6 +536,8 @@ else
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
                 ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                release_lock
+                trap - EXIT
             fi
         fi
     else
@@ -530,6 +561,8 @@ else
             fi
         else
             if [[ "$1" == "--sound" ]]; then
+                acquire_lock
+                trap release_lock EXIT
                 [[ "$startnotif" == true ]] && notify-send "Screen Snip Recording" "Select the region to Start" -a "E-Z Recorder"
                 region=$(slurp)
                 if [[ -z "$region" ]]; then
@@ -537,6 +570,8 @@ else
                     exit 1
                 fi
                 wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
+                release_lock
+                trap - EXIT
             elif [[ "$1" == "--fullscreen-sound" ]]; then
                 if [[ "$save" == true ]]; then
                     [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
@@ -553,6 +588,8 @@ else
                 wf-recorder -o $(getactivemonitor) --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
+                acquire_lock
+                trap release_lock EXIT
                 [[ "$startnotif" == true ]] && notify-send "GIF Screen Snip Recording" "Select the region to Start" -a "E-Z Recorder"
                 region=$(slurp)
                 if [[ -z "$region" ]]; then
@@ -560,7 +597,11 @@ else
                     exit 1
                 fi
                 wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+                release_lock
+                trap - EXIT
             else
+                acquire_lock
+                trap release_lock EXIT
                 [[ "$startnotif" == true ]] && notify-send "Screen Snip Recording" "Select the region to Start" -a "E-Z Recorder"
                 region=$(slurp)
                 if [[ -z "$region" ]]; then
@@ -568,6 +609,8 @@ else
                     exit 1
                 fi
                 wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+                release_lock
+                trap - EXIT
             fi
         fi
     fi
