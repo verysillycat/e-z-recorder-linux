@@ -4,7 +4,7 @@
 <br><br><br>
 ## Dependencies
 * **Wayland**: `jq`, `wl-clipboard`, `slurp` & `wf-recorder`
-* **COSMIC & GNOME / KDE Wayland**: `jq`, `wl-clipboard` & `kooha`
+* ****COSMIC & GNOME / KDE Wayland****: `jq`, `wl-clipboard` & `kooha`
 * **X11**: `jq`, `xclip`, `slop` & `ffmpeg`
 
 <details>
@@ -27,10 +27,10 @@ Go to your prefered terminal and execute this command depending on your Distro.
 
 | Compositor        | Distribution              | Instructions                                                                          |
 | ------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| COSMIC & GNOME / KDE Wayland         | **Debian/Ubuntu**                  | `sudo apt install kooha jq wl-clipboard`                         |
-| COSMIC & GNOME / KDE Wayland   | **Fedora**     | `sudo dnf install kooha jq wl-clipboard`                                                                                |
-| COSMIC & GNOME / KDE Wayland       | **Arch**       | `sudo pacman -S kooha jq wl-clipboard`                                                                                  |
-| COSMIC & GNOME / KDE Wayland      | **Gentoo**      | `sudo emerge -av media-video/kooha app-misc/jq x11-misc/wl-clipboard` |
+| **COSMIC & GNOME / KDE Wayland**         | **Debian/Ubuntu**                  | `sudo apt install kooha jq wl-clipboard`                         |
+| **COSMIC & GNOME / KDE Wayland**   | **Fedora**     | `sudo dnf install kooha jq wl-clipboard`                                                                                |
+| **COSMIC & GNOME / KDE Wayland**       | **Arch**       | `sudo pacman -S kooha jq wl-clipboard`                                                                                  |
+| **COSMIC & GNOME / KDE Wayland**      | **Gentoo**      | `sudo emerge -av media-video/kooha app-misc/jq x11-misc/wl-clipboard` |
  </details>
 
 ## Installation
