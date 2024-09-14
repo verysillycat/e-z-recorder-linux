@@ -251,8 +251,9 @@ upload() {
 
 if [[ "$1" == "upload" || "$1" == "-u" ]]; then
     upload_mode=true
-    if [[ -f "$lockfile" ]]; then
-        other_pid=$(cat "$lockfile")
+    upload_lockfile="$(eval echo $HOME/.config/e-z-recorder/upload.lck)"
+    if [[ -f "$upload_lockfile" ]]; then
+        other_pid=$(cat "$upload_lockfile")
         if kill -0 "$other_pid" 2>/dev/null; then
             echo "Another upload process is already running."
             read -p "Do you want to terminate the other upload process? (Y/N): " confirm
@@ -260,26 +261,26 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
                 kill "$other_pid"
             else
                 echo "Waiting for the other upload process to finish..."
-                while [[ -f "$lockfile" ]] && kill -0 $(cat "$lockfile") 2>/dev/null; do
+                while [[ -f "$upload_lockfile" ]] && kill -0 $(cat "$upload_lockfile") 2>/dev/null; do
                     sleep 2.5
                 done
             fi
         fi
     fi
-    echo $$ > "$lockfile"
-    trap 'rm -f "$lockfile"; exit' INT TERM EXIT
+    echo $$ > "$upload_lockfile"
+    trap 'rm -f "$upload_lockfile"; exit' INT TERM EXIT
 
     shift
     files=("$@")
     if [[ ${#files[@]} -eq 0 ]]; then
         printf "\033[1m(?) \033[0mNo files specified for upload.\n"
-        rm -f "$lockfile"
+        rm -f "$upload_lockfile"
         exit 1
     fi
 
     if [[ ${#files[@]} -ge 6 ]]; then
         printf "\033[1;5;31mERROR:\033[0m Too many files specified for upload. Please upload fewer than 6 files at a time.\n"
-        rm -f "$lockfile"
+        rm -f "$upload_lockfile"
         exit 1
     fi
 
@@ -341,7 +342,7 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
         fi
     done
 
-    rm -f "$lockfile"
+    rm -f "$upload_lockfile"
     trap - INT TERM EXIT
     exit 0
 fi
