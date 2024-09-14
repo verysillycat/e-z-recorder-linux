@@ -251,7 +251,7 @@ upload() {
 
 if [[ "$1" == "upload" || "$1" == "-u" ]]; then
     upload_mode=true
-    upload_lockfile="$(eval echo $HOME/.config/e-z-recorder/upload.lck)"
+    upload_lockfile="$(eval echo $HOME/.config/e-z-recorder/.upload.lck)"
     if [[ -f "$upload_lockfile" ]]; then
         other_pid=$(cat "$upload_lockfile")
         if kill -0 "$other_pid" 2>/dev/null; then
@@ -433,7 +433,7 @@ if [[ "$1" == "--gif" ]]; then
     touch "$gif_pending_file"
 fi
 
-lockfile="$(eval echo $HOME/.config/e-z-recorder/script.lck)"
+lockfile="$(eval echo $HOME/.config/e-z-recorder/.script.lck)"
 
 acquire_lock() {
     if [[ -f "$lockfile" ]]; then
