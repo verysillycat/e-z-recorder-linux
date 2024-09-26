@@ -44,11 +44,13 @@ config_file="~/.config/e-z-recorder/config.conf"
 create_default_config() {
     mkdir -p "$(dirname "$(eval echo $config_file)")"
     cat <<EOL > "$(eval echo $config_file)"
-# On Kooba FPS, Encoder & Pixel Format doesn't work but you can change FPS on GUI Preferences.
+# On Kooba FPS, Encoder, Preset, CRF & Pixel Format don't work but you can change FPS on GUI Preferences.
 ## Aswell as the file extension, and directory in there.
 auth=""
 url="https://api.e-z.host/files"
 fps=60
+crf=20
+preset=fast
 pixelformat=yuv420p
 encoder=libx264
 save=false
@@ -407,7 +409,7 @@ fi
 post_process_video() {
     local input_file=$1
     local output_file="${input_file%.mp4}_processed.mp4"
-    ffmpeg -i "$input_file" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=$pixelformat" -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:v $encoder -preset fast -crf 20 -movflags +faststart -c:a copy "$output_file"
+    ffmpeg -i "$input_file" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=$pixelformat" -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:v $encoder -preset $preset -crf $crf -movflags +faststart -c:a copy "$output_file"
     mv "$output_file" "$input_file"
 }
 
@@ -495,7 +497,7 @@ else
                     exit 1
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
-                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset $preset -crf $crf -pix_fmt $pixelformat -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
                 release_lock
                 trap - EXIT
             elif [[ "$1" == "--fullscreen-sound" ]]; then
@@ -504,14 +506,14 @@ else
                 else
                     [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
                 fi
-                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -f pulse -i "$(getaudiooutput)" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset $preset -crf $crf -pix_fmt $pixelformat -movflags +faststart -c:a aac -b:a 128k './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--fullscreen" ]]; then
                 if [[ "$save" == true ]]; then
                     [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
                 else
                     [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
                 fi
-                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size $(getactivemonitor) -framerate $fps -f x11grab -i $DISPLAY -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset $preset -crf $crf -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
                 acquire_lock
@@ -523,7 +525,7 @@ else
                     exit 1
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
-                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset $preset -crf $crf -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
                 release_lock
                 trap - EXIT
             else
@@ -536,7 +538,7 @@ else
                     exit 1
                 fi
                 IFS=', ' read -r x y width height <<< "$region"
-                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset fast -crf 20 -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
+                ffmpeg -video_size "${width}x${height}" -framerate $fps -f x11grab -i $DISPLAY+"${x},${y}" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v $encoder -preset $preset -crf $crf -pix_fmt $pixelformat -movflags +faststart './recording_'"$(getdate)"'.mp4' & disown
                 release_lock
                 trap - EXIT
             fi

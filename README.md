@@ -63,6 +63,8 @@ Now paste that API KEY into auth variable in the Config File
 * `fps` will be your Max FPS
 * `pixelformat` set the pixel format, default is `yuv420p`
 * `encoder` set the encoder, default is `libx264`
+* `preset` set the preset profile
+* `crf` set crf number
 * `save` will save your Recorded Videos on `~/Videos`
 * `failsave` if your Video Recording upload fails, it will be saved on `~/Videos/e-zfailed`
 * `colorworkaround` re-encode videos on upload for color correction, might take longer to upload
