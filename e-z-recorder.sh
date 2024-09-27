@@ -108,7 +108,7 @@ update_config() {
         echo "$new_config_content" > "$config_path"
         if [[ "$updated" == true ]]; then
             echo "Configuration updated."
-            notify-send "Configuration updated" "New Arguments were added." -a "E-Z Recorder"
+            notify-send "Configuration updated" "New Options were added." -a "E-Z Recorder"
             exit 0
         fi
     fi
