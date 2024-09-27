@@ -41,9 +41,7 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
 fi
 
 config_file="~/.config/e-z-recorder/config.conf"
-create_default_config() {
-    mkdir -p "$(dirname "$(eval echo $config_file)")"
-    cat <<EOL > "$(eval echo $config_file)"
+default_config_content=$(cat <<EOL
 # On Kooba FPS, Encoder, Preset, CRF & Pixel Format don't work but you can change FPS on GUI Preferences.
 ## Aswell as the file extension, and directory in there.
 auth=""
@@ -64,15 +62,63 @@ kooha_dir="~/Videos/Kooha"
 gif_pending_file="/tmp/gif_pending"
 kooha_last_time="~/.config/e-z-recorder/last_time"
 EOL
+)
+
+create_default_config() {
+    mkdir -p "$(dirname "$(eval echo $config_file)")"
+    echo "$default_config_content" > "$(eval echo $config_file)"
     echo "Default Configuration file created."
     printf "\e[30m\e[46m $(eval echo $config_file) \e[0m\n"
     printf "\e[1;34mEdit the configuration file to set your E-Z API KEY.\e[0m\n"
     printf "\e[1;31mOtherwise, the script will not work.\e[0m\n"
 }
 
+update_config() {
+    local config_path="$(eval echo $config_file)"
+    local updated=false
+    local new_config_content=""
+
+    declare -A existing_config
+    while IFS='=' read -r key value; do
+        [[ "$key" =~ ^#.*$ || -z "$key" || -z "$value" ]] && continue
+        existing_config["$key"]="$value"
+    done < <(grep -v '^#' "$config_path")
+
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^#.*$ || -z "$line" ]]; then
+            new_config_content+="$line"$'\n'
+            continue
+        fi
+        key=$(echo "$line" | cut -d '=' -f 1)
+        if [[ -z "${existing_config[$key]}" ]]; then
+            new_config_content+="$line"$'\n'
+            updated=true
+        else
+            new_config_content+="$key=${existing_config[$key]}"$'\n'
+            unset existing_config["$key"]
+        fi
+    done <<< "$default_config_content"
+
+    for key in "${!existing_config[@]}"; do
+        new_config_content+="$key=${existing_config[$key]}"$'\n'
+    done
+
+    new_config_content=$(echo -n "$new_config_content")
+    if [[ "$new_config_content" != "$(cat "$config_path")" ]]; then
+        echo "$new_config_content" > "$config_path"
+        if [[ "$updated" == true ]]; then
+            echo "Configuration updated."
+            notify-send "Configuration updated" "New Arguments were added." -a "E-Z Recorder"
+            exit 0
+        fi
+    fi
+}
+
 if [[ ! -f "$(eval echo $config_file)" ]]; then
     create_default_config
     exit 0
+else
+    update_config
 fi
 
 source "$(eval echo $config_file)"
