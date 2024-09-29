@@ -618,7 +618,7 @@ else
                     notify-send "Recording Canceling" 'Canceled' -a "E-Z Recorder"
                     exit 1
                 fi
-                wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
+                wf-recorder --pixel-format $pixelformat -c "$encoder" -p preset=$preset -p crf=$crf -f './recording_'"$(getdate)"'.mp4' --geometry "$region" --audio="$(getaudiooutput)" -r $fps & disown
                 release_lock
                 trap - EXIT
             elif [[ "$1" == "--fullscreen-sound" ]]; then
@@ -627,14 +627,14 @@ else
                 else
                     [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
                 fi
-                wf-recorder -o $(getactivemonitor) --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
+                wf-recorder -o $(getactivemonitor) --pixel-format $pixelformat -c "$encoder" -p preset=$preset -p crf=$crf -f './recording_'"$(getdate)"'.mp4' --audio="$(getaudiooutput)" -r $fps & disown
             elif [[ "$1" == "--fullscreen" ]]; then
                 if [[ "$save" == true ]]; then
                     [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
                 else
                     [[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
                 fi
-                wf-recorder -o $(getactivemonitor) --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
+                wf-recorder -o $(getactivemonitor) --pixel-format $pixelformat -c "$encoder" -p preset=$preset -p crf=$crf -f './recording_'"$(getdate)"'.mp4' -r $fps & disown
             elif [[ "$1" == "--gif" ]]; then
                 touch "$gif_pending_file"
                 acquire_lock
@@ -645,7 +645,7 @@ else
                     notify-send "Recording Canceling" 'Canceled' -a "E-Z Recorder"
                     exit 1
                 fi
-                wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+                wf-recorder --pixel-format $pixelformat -c "$encoder" -p preset=$preset -p crf=$crf -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
                 release_lock
                 trap - EXIT
             else
@@ -657,7 +657,7 @@ else
                     notify-send "Recording Canceling" 'Canceled' -a "E-Z Recorder"
                     exit 1
                 fi
-                wf-recorder --pixel-format $pixelformat -c "$encoder" -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
+                wf-recorder --pixel-format $pixelformat -c "$encoder" -p preset=$preset -p crf=$crf -f './recording_'"$(getdate)"'.mp4' --geometry "$region" -r $fps & disown
                 release_lock
                 trap - EXIT
             fi
