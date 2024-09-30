@@ -595,7 +595,9 @@ acquire_lock() {
             exit 1
         else
             echo $$ > "$lockfile"
-        fi
+            fi
+        else
+            echo $$ > "$lockfile"
     fi
 }
 
