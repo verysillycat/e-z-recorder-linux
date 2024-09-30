@@ -255,6 +255,7 @@ upload() {
     local file=$1
     local is_gif=$2
     response_file="/tmp/uploadvideo.json"
+    upload_pid_file="$(eval echo $HOME/.config/e-z-recorder/.upload_pid)"
 
     if [[ ! -f "$file" ]]; then
         notify-send "Error: File not found: $file" -a "E-Z Recorder"
@@ -273,6 +274,10 @@ upload() {
         content_type="application/octet-stream"
     fi
 
+    if [[ -f "$upload_pid_file" ]]; then
+        rm "$upload_pid_file"
+    fi
+    echo $$ > "$upload_pid_file"
     http_code=$(curl -X POST -F "file=@${file};type=${content_type}" -H "key: ${auth}" -w "%{http_code}" -o $response_file -s "${url}")
 
     if ! jq -e . >/dev/null 2>&1 < $response_file; then
@@ -301,6 +306,9 @@ upload() {
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
         [[ "$upload_mode" == true ]] && printf "\033[1;5;31mERROR:\033[0m Upload failed for file: \033[1;34m$filename\033[0m\n"
         rm $response_file
+        if [[ -f "$upload_pid_file" ]]; then
+            rm -f "$upload_pid_file"
+        fi
         exit 1
     fi
 
@@ -316,15 +324,15 @@ upload() {
         fi
         if [[ "$is_gif" == "--gif" || "$file" == *.gif ]]; then
             if [[ "$XDG_SESSION_TYPE" != "wayland" || ("$XDG_CURRENT_DESKTOP" != "GNOME" && "$XDG_CURRENT_DESKTOP" != "KDE") ]]; then
-                notify-send -i link "GIF URL copied to clipboard" -a "E-Z Recorder"
-            fi
+                notify-send "GIF URL copied to clipboard" -a "E-Z Recorder" -i link
+        fi
         [[ "$is_gif" == "--gif" && "$1" != "-u" && "$1" != "upload" ]] && rm "$gif_pending_file"
         else
             if [[ "$XDG_SESSION_TYPE" != "wayland" || ("$XDG_CURRENT_DESKTOP" != "GNOME" && "$XDG_CURRENT_DESKTOP" != "KDE") ]]; then
-                notify-send -i link "Video URL copied to clipboard" -a "E-Z Recorder"
+                notify-send "Video URL copied to clipboard" -a "E-Z Recorder" -i link
             fi
         fi
-            if [[ "$save" == false && "$upload_mode" != true ]]; then
+        if [[ "$save" == false && "$upload_mode" != true ]]; then
             rm "$file"
         fi
     else
@@ -332,6 +340,34 @@ upload() {
     fi
     if [[ "$upload_mode" != true ]]; then
         [[ -f $response_file ]] && rm $response_file
+    fi
+    if [[ -f "$upload_pid_file" ]]; then
+        rm -f "$upload_pid_file"
+    fi
+}
+
+abort_upload() {
+    if [[ -f "$(eval echo $HOME/.config/e-z-recorder/.upload_pid)" ]]; then
+        upload_pid=$(cat "$(eval echo $HOME/.config/e-z-recorder/.upload_pid)")
+        if kill -0 "$upload_pid" 2>/dev/null; then
+            pkill -P "$upload_pid"
+            kill "$upload_pid"
+            rm "$(eval echo $HOME/.config/e-z-recorder/.upload_pid)"
+            notify-send "Recording Upload Aborted" "The upload has been canceled." -a "E-Z Recorder"
+        fi
+    elif [[ -f "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)" ]]; then
+        upload_lock_pid=$(cat "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)")
+        if kill -0 "$upload_lock_pid" 2>/dev/null; then
+            pkill -P "$upload_lock_pid"
+            kill "$upload_lock_pid"
+            if [[ -f "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)" ]]; then
+                rm "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)"
+            fi
+            notify-send "Recording(s) Upload Aborted" "The upload has been canceled." -a "E-Z Recorder"
+        fi
+    else
+        notify-send "No Recording in Progress" "There is no recording to abort." -a "E-Z Recorder"
+        exit 0
     fi
 }
 
@@ -441,6 +477,9 @@ else
 fi
 
 if [[ "$1" == "--abort" ]]; then
+    if [[ "$upload_mode" == true ]]; then
+        abort_upload
+    fi
     if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
         if pgrep ffmpeg > /dev/null; then
             [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been canceled." -a "E-Z Recorder"
@@ -454,8 +493,7 @@ if [[ "$1" == "--abort" ]]; then
             fi
             exit 0
         else
-            notify-send "No Recording in Progress" "There is no recording to cancel." -a "E-Z Recorder"
-            exit 0
+            abort_upload
         fi
     else
         if pgrep wf-recorder > /dev/null; then
@@ -473,10 +511,10 @@ if [[ "$1" == "--abort" ]]; then
             [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been canceled." -a "E-Z Recorder"
             parent_pid=$(pgrep -f "kooha" | xargs -I {} ps -o ppid= -p {})
             if [[ -n "$parent_pid" ]]; then
-            if [[ -d "$(eval echo $kooha_dir)" ]]; then
-                if [[ -f "$(eval echo $kooha_last_time)" ]]; then
-                    read_kooha_last_time=$(cat "$(eval echo $kooha_last_time)")
-                    find "$(eval echo $kooha_dir)" -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.webm" \) -newer "$read_kooha_last_time" -exec rm {} \;
+                if [[ -d "$(eval echo $kooha_dir)" ]]; then
+                    if [[ -f "$(eval echo $kooha_last_time)" ]]; then
+                        read_kooha_last_time=$(cat "$(eval echo $kooha_last_time)")
+                        find "$(eval echo $kooha_dir)" -type f \( -name "*.mp4" -o -name "*.mkv" -o -name "*.webm" \) -newer "$read_kooha_last_time" -exec rm {} \;
                         rm "$(eval echo $kooha_last_time)"
                     fi
                 fi
@@ -484,8 +522,7 @@ if [[ "$1" == "--abort" ]]; then
             fi
             exit 0
         else
-            notify-send "No Recording in Progress" "There is no recording to cancel." -a "E-Z Recorder"
-            exit 0
+            abort_upload
         fi
     fi
 fi
@@ -530,8 +567,6 @@ acquire_lock() {
         else
             echo $$ > "$lockfile"
         fi
-    else
-        echo $$ > "$lockfile"
     fi
 }
 
