@@ -372,7 +372,7 @@ abort_upload() {
                 fi
             fi
             rm "$(eval echo $HOME/.config/e-z-recorder/.upload_pid)"
-            notify-send "Recording Upload Aborted" "The upload has been canceled." -a "E-Z Recorder"
+            notify-send "Recording Aborted" "The upload has been aborted." -a "E-Z Recorder"
             check=true
         fi
     elif [[ -f "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)" ]]; then
@@ -383,7 +383,7 @@ abort_upload() {
             if [[ -f "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)" ]]; then
                 rm "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)"
             fi
-            notify-send "Recording(s) Upload Aborted" "The upload has been canceled." -a "E-Z Recorder"
+            notify-send "Recording(s) Aborted" "The upload has been aborted." -a "E-Z Recorder"
             check=true
         fi
     elif [[ -f "$gif_pending_file" ]]; then
@@ -511,7 +511,7 @@ if [[ "$1" == "--abort" ]]; then
     fi
     if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
         if pgrep ffmpeg > /dev/null; then
-            [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been canceled." -a "E-Z Recorder"
+            [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been aborted." -a "E-Z Recorder"
             pkill ffmpeg
             if [[ -f "$gif_pending_file" ]]; then
                 rm "$gif_pending_file"
@@ -526,7 +526,7 @@ if [[ "$1" == "--abort" ]]; then
         fi
     else
         if pgrep wf-recorder > /dev/null; then
-            [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been canceled." -a "E-Z Recorder"
+            [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been aborted." -a "E-Z Recorder"
             pkill wf-recorder
             if [[ -f "$gif_pending_file" ]]; then
                 rm "$gif_pending_file"
@@ -537,7 +537,7 @@ if [[ "$1" == "--abort" ]]; then
             fi
             exit 0
         elif pgrep kooha > /dev/null; then
-            [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been canceled." -a "E-Z Recorder"
+            [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been aborted." -a "E-Z Recorder"
             parent_pid=$(pgrep -f "kooha" | xargs -I {} ps -o ppid= -p {})
             if [[ -n "$parent_pid" ]]; then
                 if [[ -d "$(eval echo $kooha_dir)" ]]; then
