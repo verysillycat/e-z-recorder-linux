@@ -352,6 +352,12 @@ abort_upload() {
         if kill -0 "$upload_pid" 2>/dev/null; then
             pkill -P "$upload_pid"
             kill "$upload_pid"
+            if [[ "$save" == false ]]; then
+                video_file=$(ls -t recording_*.mp4 | head -n 1)
+                rm "$video_file"
+                gif_file=$(ls -t recording_*.gif | head -n 1)
+                rm "$gif_file"
+            fi
             rm "$(eval echo $HOME/.config/e-z-recorder/.upload_pid)"
             notify-send "Recording Upload Aborted" "The upload has been canceled." -a "E-Z Recorder"
         fi
