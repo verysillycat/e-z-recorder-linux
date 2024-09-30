@@ -240,14 +240,17 @@ upload() {
         content_type="application/octet-stream"
     fi
 
-    curl -X POST -F "file=@${file};type=${content_type}" -H "key: ${auth}" -v "${url}" 2>/dev/null > $response_file
+    http_code=$(curl -X POST -F "file=@${file};type=${content_type}" -H "key: ${auth}" -w "%{http_code}" -o $response_file -s "${url}")
 
     if ! jq -e . >/dev/null 2>&1 < $response_file; then
-        notify-send "Error occurred while uploading. Please try again later." -a "E-Z Recorder"
+            if [[ "$http_code" == "413" ]]; then
+                notify-send "Recording too large." "Try a smaller recording or lower the settings." -a "E-Z Recorder"
+            else
+                notify-send "Error occurred on upload." "Status Code: $http_code Please try again later." -a "E-Z Recorder"
+            fi
         rm $response_file
         [[ "$failsave" == true && "$1" != "--abort" && "$upload_mode" != true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
-        [[ "$upload_mode" == true ]] && printf "\033[1;5;31mERROR:\033[0m Upload failed for file: \033[1;34m$filename\033[0m\n"
         exit 1
     fi
 
@@ -255,9 +258,11 @@ upload() {
     if [[ "$success" != "true" ]] || [[ "$success" == "null" ]]; then
         error=$(jq -r ".error" < $response_file)
         if [[ "$error" == "null" ]]; then
-            notify-send "Error occurred while uploading. Please try again later." -a "E-Z Recorder"
-        else
-            notify-send "Error: $error" -a "E-Z Recorder"
+            if [[ "$http_code" == "413" ]]; then
+                notify-send "Recording too large." "Try a smaller recording or lower the settings." -a "E-Z Recorder"
+            else
+                notify-send "Error occurred on upload." "Status Code: $http_code Please try again later." -a "E-Z Recorder"
+            fi
         fi
         [[ "$failsave" == true && "$1" != "--abort" && "$upload_mode" != true ]] && mkdir -p ~/Videos/e-zfailed && mv "$file" ~/Videos/e-zfailed/
         [[ "$is_gif" == "--gif" ]] && rm "$gif_pending_file"
@@ -290,10 +295,10 @@ upload() {
             rm "$file"
         fi
     else
-        notify-send "Error: File URL is null" -a "E-Z Recorder"
+        notify-send "Error: File URL is null. HTTP Code: $http_code" -a "E-Z Recorder"
     fi
     if [[ "$upload_mode" != true ]]; then
-        rm $response_file
+        [[ -f $response_file ]] && rm $response_file
     fi
 }
 
@@ -355,13 +360,13 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
         fi
 
         if [[ ! -f "$file" ]]; then
-            printf "\033[1m[1/4] \033[0mChecking if\033[1;34m $filename \033[0mexists\n"
+            printf "\n\033[1m[1/4] \033[0mChecking if\033[1;34m $filename \033[0mexists\n"
             sleep 0.3
             printf "\033[1;5;31mERROR:\033[0m File not found:\033[1;34m $filename\033[0m\n"
             continue
         fi
         sleep 0.1
-        printf "\033[1m[1/4] \033[0mChecking if\033[1;34m $filename \033[0mexists\n"
+        printf "\n\033[1m[1/4] \033[0mChecking if\033[1;34m $filename \033[0mexists\n"
         sleep 0.2
         printf "\033[1m[2/4]\033[0m\033[1;34m $filename \033[0mfound\n"
         sleep 0.2
@@ -370,8 +375,8 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
         upload "$file" &
         spinner $!
 
-        upload_url=$(jq -r ".imageUrl" < /tmp/uploadvideo.json)
-        if [[ $? -eq 0 ]]; then
+        if [[ $? -eq 0 && -f /tmp/uploadvideo.json ]]; then
+            upload_url=$(jq -r ".imageUrl" < /tmp/uploadvideo.json)
             if [[ "$XDG_SESSION_TYPE" == "x11" ]]; then
                 echo "$upload_url" | xclip -selection clipboard
             else
@@ -379,11 +384,11 @@ if [[ "$1" == "upload" || "$1" == "-u" ]]; then
             fi
             processed_files["$file_key"]=1
         fi
-        if [[ $? -eq 0 ]]; then
-            printf "\n\033[1m[4/4]\033[0m Upload successful: \033[1;32m%s\033[0m\n" "$upload_url"
-            rm /tmp/uploadvideo.json
+        if [[ $? -eq 0 && -n "$upload_url" ]]; then
+            printf "\n\033[1m[4/4]\033[0m Upload successful: \033[1;32m%s\033[0m$upload_url\n\n"
+            [[ -f /tmp/uploadvideo.json ]] && rm /tmp/uploadvideo.json
         else
-            printf "\n\033[1;5;31mERROR:\033[0m Failed to upload file: \033[1;34m%s\033[0m\n" "$filename"
+            printf "\n\033[1;5;31mERROR:\033[0m Failed to upload file: \033[1;34m%s\033[0m$filename\n\n"
         fi
         if (( file_count % 3 == 0 )); then
             sleep 3.8
