@@ -347,19 +347,33 @@ upload() {
 }
 
 abort_upload() {
+    local check=false
     if [[ -f "$(eval echo $HOME/.config/e-z-recorder/.upload_pid)" ]]; then
         upload_pid=$(cat "$(eval echo $HOME/.config/e-z-recorder/.upload_pid)")
         if kill -0 "$upload_pid" 2>/dev/null; then
             pkill -P "$upload_pid"
             kill "$upload_pid"
             if [[ "$save" == false ]]; then
-                video_file=$(ls -t recording_*.mp4 | head -n 1)
-                rm "$video_file"
-                gif_file=$(ls -t recording_*.gif | head -n 1)
-                rm "$gif_file"
+                if [[ "$XDG_SESSION_TYPE" == "wayland" && ("$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE"||"$XDG_CURRENT_DESKTOP" == "COSMIC") ]]; then
+                    new_files=$(find "$(eval echo $kooha_dir)" -type f -newer "$(eval echo $kooha_last_time)" | sort -n)
+                    file_count=$(echo "$new_files" | wc -l)
+                    if (( file_count > 0 )); then
+                        for file_path in $new_files; do
+                            rm "$file_path"
+                        done
+                    fi
+                else
+                    video_file=$(ls -t recording_*.mp4 | head -n 1)
+                    rm "$video_file"
+                    gif_file=$(ls -t recording_*.gif | head -n 1)
+                    if [[ -f "$gif_pending_file" ]]; then
+                        rm "$gif_file"
+                    fi
+                fi
             fi
             rm "$(eval echo $HOME/.config/e-z-recorder/.upload_pid)"
             notify-send "Recording Upload Aborted" "The upload has been canceled." -a "E-Z Recorder"
+            check=true
         fi
     elif [[ -f "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)" ]]; then
         upload_lock_pid=$(cat "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)")
@@ -370,8 +384,17 @@ abort_upload() {
                 rm "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)"
             fi
             notify-send "Recording(s) Upload Aborted" "The upload has been canceled." -a "E-Z Recorder"
+            check=true
         fi
-    else
+    elif [[ -f "$gif_pending_file" ]]; then
+        if pgrep -f "ffmpeg" > /dev/null; then
+            gif_pid=$(pgrep -f "ffmpeg")
+            kill "$gif_pid"
+            [[ -f "$gif_pending_file" ]] && rm "$gif_pending_file"
+            check=true
+        fi
+    fi
+    if [[ "$check" == false ]]; then
         notify-send "No Recording in Progress" "There is no recording to abort." -a "E-Z Recorder"
         exit 0
     fi
