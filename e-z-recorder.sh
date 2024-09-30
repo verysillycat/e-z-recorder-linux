@@ -40,6 +40,39 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     exit 0
 fi
 
+check_dependencies() {
+    local missing_dependencies=()
+    local dependencies=("jq" "curl")
+
+    if [[ "$XDG_SESSION_TYPE" == "wayland" ]]; then
+        if [[ "$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE" || "$XDG_CURRENT_DESKTOP" == "COSMIC" ]]; then
+            dependencies+=("wl-copy" "kooha")
+        else
+            dependencies+=("wl-copy" "slurp" "wf-recorder" "wlr-randr")
+        fi
+    else
+        dependencies+=("xclip" "slop" "ffmpeg" "xdpyinfo")
+    fi
+
+    for dep in "${dependencies[@]}"; do
+        if ! command -v "$dep" &> /dev/null; then
+            missing_dependencies+=("$dep")
+        fi
+    done
+
+    if [ ${#missing_dependencies[@]} -ne 0 ]; then
+        local formatted_deps=$(IFS=,; echo "${missing_dependencies[*]}")
+        formatted_deps=${formatted_deps//,/, }
+        formatted_deps=${formatted_deps//wl-copy/wl-clipboard}
+        formatted_deps=$(echo "$formatted_deps" | sed 's/, \([^,]*\)$/ \& \1/')
+        echo -e "\e[31mMissing Dependencies: \033[37;7m${formatted_deps}\033[0m\e[0m"
+        echo "These are the required dependencies, install them and try again."
+        notify-send "Missing Dependencies" "${formatted_deps}" -a "E-Z Recorder"
+        exit 1
+    fi
+
+}
+check_dependencies
 config_file="~/.config/e-z-recorder/config.conf"
 default_config_content=$(cat <<EOL
 # On Kooba FPS, Encoder, Preset, CRF & Pixel Format don't work but you can change FPS on GUI Preferences.
