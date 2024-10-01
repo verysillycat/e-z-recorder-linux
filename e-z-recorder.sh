@@ -36,6 +36,7 @@ if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "  upload, -u             Upload specified video files (mp4, mkv, webm, gif)"
     echo "  --config               Open the configuration file in the default text editor"
     echo "  --config-reinstall     Reinstall the configuration file with default settings"
+    echo "  --silent, -s           Silences the script's output"
     echo ""
     exit 0
 fi
@@ -96,6 +97,8 @@ gif_pending_file="/tmp/gif_pending"
 kooha_last_time="~/.config/e-z-recorder/last_time"
 EOL
 )
+
+[[ "$1" =~ -s|--silent ]] && exec > /dev/null 2>&1
 
 create_default_config() {
     mkdir -p "$(dirname "$(eval echo $config_file)")"
