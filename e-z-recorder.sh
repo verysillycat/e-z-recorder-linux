@@ -372,7 +372,7 @@ abort_upload() {
                 fi
             fi
             rm "$(eval echo $HOME/.config/e-z-recorder/.upload_pid)"
-            notify-send "Recording Aborted" "The upload has been aborted." -a "E-Z Recorder"
+            [[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been aborted." -a "E-Z Recorder"
             check=true
         fi
     elif [[ -f "$(eval echo $HOME/.config/e-z-recorder/.upload.lck)" ]]; then
