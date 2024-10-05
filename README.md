@@ -75,6 +75,10 @@ Now paste that API KEY into auth variable in the Config File
 - `pixelformat` set the pixel format, default is `yuv420p`
 - `encoder` set the encoder, default is `libx264`
 - `preset` set the preset profile
+- `wlscreenrec` set to true if want to use `wl-screenrec` (only for wl-roots based DEs and recommend for old GPUs/iGPUs)
+- `bitrate` set the bitrate (only for `wl-screenrec`)
+- `codec` set the codec, default is `hevc` (only for `wl-screenrec`)
+- `extpixelformat` set the pixel format, default is `nv12` (only for `wl-screenrec`)
 - `crf` set crf number
 - `save` will save your Recorded Videos on `~/Videos`
 - `failsave` if your Video Recording upload fails, it will be saved on `~/Videos/e-zfailed`
