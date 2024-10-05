@@ -48,7 +48,10 @@ check_dependencies() {
 		if [[ "$XDG_CURRENT_DESKTOP" == "GNOME" || "$XDG_CURRENT_DESKTOP" == "KDE" || "$XDG_CURRENT_DESKTOP" == "COSMIC" ]]; then
 			dependencies+=("wl-copy" "kooha")
 		else
-			dependencies+=("wl-copy" "slurp" "wf-recorder" "wlr-randr")
+			dependencies+=("wl-copy" "slurp" "wlr-randr")
+			if ! command -v "wf-recorder" &>/dev/null && ! command -v "wl-screenrec" &>/dev/null; then
+				missing_dependencies+=("wf-recorder or wl-screenrec")
+			fi
 		fi
 	else
 		dependencies+=("xclip" "slop" "ffmpeg" "xdpyinfo")
@@ -105,6 +108,10 @@ gif_pending_file="/tmp/gif_pending"
 kooha_last_time="~/.config/e-z-recorder/last_time"
 EOL
 )
+
+if ! command -v "wf-recorder" &>/dev/null; then
+	sed -i 's/^wlscreenrec=.*/wlscreenrec=true/' "$(eval echo $config_file)"
+fi
 
 create_default_config() {
 	mkdir -p "$(dirname "$(eval echo $config_file)")"
