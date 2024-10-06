@@ -554,6 +554,17 @@ if [[ "$1" == "--abort" ]]; then
 				rm "$video_file"
 			fi
 			exit 0
+		elif pgrep wl-screenrec >/dev/null; then
+			[[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been aborted." -a "E-Z Recorder"
+			pkill wl-screenrec
+			if [[ -f "$gif_pending_file" ]]; then
+				rm "$gif_pending_file"
+			fi
+			if [[ "$save" == false ]]; then
+				video_file=$(ls -t recording_*.mp4 | head -n 1)
+				rm "$video_file"
+			fi
+			exit 0
 		elif pgrep kooha >/dev/null; then
 			[[ "$endnotif" == true ]] && notify-send "Recording Aborted" "The upload has been aborted." -a "E-Z Recorder"
 			parent_pid=$(pgrep -f "kooha" | xargs -I {} ps -o ppid= -p {})
