@@ -98,7 +98,7 @@ startnotif=true
 endnotif=true
 
 wlscreenrec=false
-codec=hevc
+codec=auto
 extpixelformat=nv12
 bitrate="5 MB"
 
