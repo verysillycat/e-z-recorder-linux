@@ -766,17 +766,27 @@ else
 						notify-send "Recording Canceling" 'Canceled' -a "E-Z Recorder"
 						exit 1
 					fi
-					"$recorder_command" --geometry "$region" --audio --audio-device "$(getaudiooutput)" --codec "$codec" -b "$bitrate" --encode-pixfmt "$extpixelformat" -f './recording_'"$(getdate)"'.mp4' &
+					command="$recorder_command --geometry \"$region\" --audio --audio-device \"$(getaudiooutput)\""
+					if [[ "$extpixelformat" != "auto" ]]; then
+						command+=" --encode-pixfmt \"$extpixelformat\""
+					fi
+					command+=" -f './recording_'"$(getdate)"'.mp4'"
+					eval "$command" &
 					disown
-				release_lock
-				trap - EXIT
-			elif [[ "$1" == "--fullscreen-sound" ]]; then
-				if [[ "$save" == true ]]; then
+					release_lock
+					trap - EXIT
+				elif [[ "$1" == "--fullscreen-sound" ]]; then
+					if [[ "$save" == true ]]; then
 						[[ "$startnotif" == true ]] && notify-send "Starting Recording" 'recording_'"$(getdate)"'.mp4' -a "E-Z Recorder"
 					else
 						[[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
 					fi
-					"$recorder_command" --output $(getactivemonitor) --audio --audio-device "$(getaudiooutput)" --codec "$codec" -b "$bitrate" --encode-pixfmt "$extpixelformat" -f './recording_'"$(getdate)"'.mp4' &
+					command="$recorder_command --output $(getactivemonitor) --audio --audio-device \"$(getaudiooutput)\""
+					if [[ "$extpixelformat" != "auto" ]]; then
+						command+=" --encode-pixfmt \"$extpixelformat\""
+					fi
+					command+=" -f './recording_'"$(getdate)"'.mp4'"
+					eval "$command" &
 					disown
 				elif [[ "$1" == "--fullscreen" ]]; then
 					if [[ "$save" == true ]]; then
@@ -784,7 +794,12 @@ else
 					else
 						[[ "$startnotif" == true ]] && notify-send "Starting Recording" 'Started' -a "E-Z Recorder"
 					fi
-					"$recorder_command" --output $(getactivemonitor) --codec "$codec" -b "$bitrate" --encode-pixfmt "$extpixelformat" -f './recording_'"$(getdate)"'.mp4' &
+					command="$recorder_command --output $(getactivemonitor)"
+					if [[ "$extpixelformat" != "auto" ]]; then
+						command+=" --encode-pixfmt \"$extpixelformat\""
+					fi
+					command+=" -f './recording_'"$(getdate)"'.mp4'"
+					eval "$command" &
 					disown
 				elif [[ "$1" == "--gif" ]]; then
 					touch "$gif_pending_file"
@@ -796,7 +811,12 @@ else
 						notify-send "Recording Canceling" 'Canceled' -a "E-Z Recorder"
 						exit 1
 					fi
-					"$recorder_command" --geometry "$region" --codec "$codec" -b "$bitrate" --encode-pixfmt "$extpixelformat" -f './recording_'"$(getdate)"'.mp4' &
+					command="$recorder_command --geometry \"$region\""
+					if [[ "$extpixelformat" != "auto" ]]; then
+						command+=" --encode-pixfmt \"$extpixelformat\""
+					fi
+					command+=" -f './recording_'"$(getdate)"'.mp4'"
+					eval "$command" &
 					disown
 					release_lock
 					trap - EXIT
@@ -809,11 +829,16 @@ else
 						notify-send "Recording Canceling" 'Canceled' -a "E-Z Recorder"
 						exit 1
 					fi
-					"$recorder_command" --geometry "$region" --codec "$codec" -b "$bitrate" --encode-pixfmt "$extpixelformat" -f './recording_'"$(getdate)"'.mp4' &
+					command="$recorder_command --geometry \"$region\""
+					if [[ "$extpixelformat" != "auto" ]]; then
+						command+=" --encode-pixfmt \"$extpixelformat\""
+					fi
+					command+=" -f './recording_'"$(getdate)"'.mp4'"
+					eval "$command" &
 					disown
 					release_lock
 					trap - EXIT
-					fi
+				fi
 			else
 				if [[ "$1" == "--sound" ]]; then
 					acquire_lock
