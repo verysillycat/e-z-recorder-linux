@@ -7,7 +7,7 @@
 
 ## Dependencies
 
-- **Wayland**: `jq`, `wl-clipboard`, `slurp` & `wf-recorder`
+- **Wayland**: `jq`, `wl-clipboard`, `slurp` & `wf-recorder` or `wl-screenrec`
 - **COSMIC & GNOME / KDE Wayland**: `jq`, `wl-clipboard` & `kooha`
 - **X11**: `jq`, `xclip`, `slop` & `ffmpeg`
 
