@@ -1,3 +1,6 @@
+> [!CAUTION]
+> This script has reached its end of life and is no longer maintained in favour of [vnrez](https://github.com/verysillycat/vnrez) which adds alot of new features, design and nest.rip support.
+---
 # E-Z Linux Recorder [<img src="https://r2.e-z.host/9e3dd702-42ab-4d6b-a8a0-b1a4ab53af33/35jx47l1.png" width="225" align="left" alt="E-Z Record Logo">](https://github.com/verysillycat/e-z-recorder-linux)
 
 #### Screen Recording & Uploading to [e-z.host](https://e-z.host) with region, GIF and sound support.
